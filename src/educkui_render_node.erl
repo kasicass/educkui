@@ -13,6 +13,7 @@
     box/1, box/2,
     stack/2, stack/3,
     cells/1, cells/2,
+    overlay/1, overlay/2,
     component/2, component/3,
     styled/2,
     width/2, height/2,
@@ -73,6 +74,15 @@ cells(Cells, Opts) when is_list(Cells) ->
         width = proplists:get_value(width, Opts),
         height = proplists:get_value(height, Opts)
     }.
+
+%% @doc Creates an overlay node: children are rendered in order on top of each
+%% other within the same rect (later children win).
+-spec overlay([#dui_node{}]) -> #dui_node{}.
+overlay(Children) -> overlay(Children, []).
+
+-spec overlay([#dui_node{}], [{atom(), term()}]) -> #dui_node{}.
+overlay(Children, _Opts) when is_list(Children) ->
+    #dui_node{type = overlay, children = Children}.
 
 %% @doc Creates a child-component node. The runtime resolves it by looking up
 %% (or initializing) the component's state, calling its `view/1`, and rendering

@@ -11,6 +11,7 @@
     box/1, box/2,
     stack/2, stack/3,
     styled/2,
+    overlay/1, overlay/2,
     component/2, component/3,
     empty/0,
     props/2,
@@ -46,6 +47,12 @@ stack(Direction, Children, Opts) -> educkui_render_node:stack(Direction, Childre
 
 -spec styled(#dui_node{}, #dui_style{}) -> #dui_node{}.
 styled(Node, Style) -> educkui_render_node:styled(Node, Style).
+
+-spec overlay([#dui_node{}]) -> #dui_node{}.
+overlay(Children) -> educkui_render_node:overlay(Children).
+
+-spec overlay([#dui_node{}], [{atom(), term()}]) -> #dui_node{}.
+overlay(Children, Opts) -> educkui_render_node:overlay(Children, Opts).
 
 -spec component(term(), module()) -> #dui_node{}.
 component(Id, Module) -> educkui_render_node:component(Id, Module).

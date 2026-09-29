@@ -27,12 +27,27 @@ render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H},
         box -> render_box(Node, X, Y, W, H, Components);
         stack -> render_stack(Node, X, Y, W, H, Components);
         cells -> {render_cells(Node, X, Y), Components, [], []};
+        overlay -> render_overlay(Node, X, Y, W, H, Components);
         component -> render_component(Node, X, Y, W, H, Components)
     end.
 
 %% ---------------------------------------------------------------------------
 %% Node renderers
 %% ---------------------------------------------------------------------------
+
+%% @doc Renders children in order on top of each other within the same rect.
+-spec render_overlay(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_overlay(#dui_node{children = Children}, X, Y, W, H, Components) ->
+    Rect = #dui_rect{x = X, y = Y, width = W, height = H},
+    lists:foldl(
+        fun(Child, {CellsAcc, CompAcc, TAcc, OAcc}) ->
+            {Cells, Comp1, Targets, Order} = render(Child, Rect, CompAcc),
+            {CellsAcc ++ Cells, Comp1, TAcc ++ Targets, OAcc ++ Order}
+        end,
+        {[], Components, [], []},
+        Children).
 
 -spec render_component(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->
