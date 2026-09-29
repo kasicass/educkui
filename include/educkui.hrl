@@ -16,8 +16,9 @@
 %% Style
 %% ---------------------------------------------------------------------------
 -record(dui_style, {
-    fg = default :: term(),
-    bg = default :: term(),
+    fg = undefined :: term(),        %% undefined means "not set" (inherit);
+                                     %% 'default' is the explicit terminal default
+    bg = undefined :: term(),
     attrs = [] :: [atom()]           %% ordset of style attributes
 }).
 
@@ -29,7 +30,7 @@
     fg = default :: term(),
     bg = default :: term(),
     attrs = [] :: [atom()],          %% ordset of style attributes
-    width = 1 :: 1 | 2,              %% display width
+    width = 1 :: 0 | 1 | 2,          %% display width (0 = placeholder)
     placeholder = false :: boolean()  %% wide-char second-column placeholder
 }).
 
