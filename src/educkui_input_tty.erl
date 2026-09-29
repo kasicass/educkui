@@ -7,7 +7,9 @@
 
 -behaviour(educkui_input).
 
--export([new/0, poll/2, mode/1, stop/1]).
+-include("educkui.hrl").
+
+-export([new/0, poll/2, mode/1, stop/1, feed/2]).
 -export([start_reader/1]).
 
 %% ---------------------------------------------------------------------------
@@ -35,6 +37,11 @@ poll(State, Timeout) ->
     after Timeout ->
         {timeout, State}
     end.
+
+%% @doc Feeds a whole line into the handler, producing one custom event.
+-spec feed(map(), binary()) -> {[#dui_event{}], map()}.
+feed(State, Data) when is_binary(Data) ->
+    {[educkui_event:custom(line, Data)], State}.
 
 -spec mode(map()) -> tty.
 mode(_State) -> tty.

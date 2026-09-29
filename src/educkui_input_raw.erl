@@ -10,7 +10,7 @@
 
 -include("educkui.hrl").
 
--export([new/0, poll/2, mode/1, stop/1]).
+-export([new/0, poll/2, mode/1, stop/1, feed/2]).
 -export([start_reader/1]).
 
 %% ---------------------------------------------------------------------------
@@ -42,6 +42,14 @@ poll(State, Timeout) ->
                 {timeout, State}
             end
     end.
+
+%% @doc Feeds raw input bytes into the handler, returning all ready events.
+%% Used by the runtime instead of `poll/2` so the gen_server never blocks.
+-spec feed(map(), binary()) -> {[#dui_event{}], map()}.
+feed(#{buffer := Buffer, event_queue := Queue} = State, Data) when is_binary(Data) ->
+    Combined = <<Buffer/binary, Data/binary>>,
+    {Events, Remaining} = educkui_escape_parser:parse(Combined),
+    {Queue ++ Events, State#{buffer := Remaining, event_queue := []}}.
 
 -spec mode(map()) -> raw.
 mode(_State) -> raw.

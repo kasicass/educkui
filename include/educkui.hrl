@@ -116,7 +116,8 @@
     root_state :: term() | undefined,
     render_interval = 16 :: pos_integer(),
     terminal_started = false :: boolean(),
-    buffer_manager :: term() | undefined,
+    current_buffer :: term() | undefined,
+    previous_buffer :: term() | undefined,
     dimensions :: {pos_integer(), pos_integer()} | undefined,
     backend_mode :: raw | tty | skip | undefined,
     backend :: module() | undefined,
@@ -126,7 +127,11 @@
     input_reader :: pid() | undefined,
     command_executor :: pid() | undefined,
     capabilities :: map() | undefined,
-    logger_handler_config :: term() | undefined
+    logger_handler_config :: term() | undefined,
+    dirty = false :: boolean(),
+    last_render :: integer() | undefined,
+    focus = [] :: [term()],
+    targets = [] :: [{term(), term()}]
 }).
 
 -endif.
