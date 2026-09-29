@@ -28,3 +28,10 @@ timeout_test() ->
 
 mode_test() ->
     ?assertEqual(raw, educkui_input_raw:mode(educkui_input_raw:new())).
+
+flush_partial_esc_test() ->
+    {[], S1} = educkui_input_raw:feed(educkui_input_raw:new(), <<27>>),
+    ?assertEqual(<<27>>, maps:get(buffer, S1)),
+    {[Ev], S2} = educkui_input_raw:flush_partial(S1),
+    ?assertEqual(esc, Ev#dui_event.key),
+    ?assertEqual(<<>>, maps:get(buffer, S2)).

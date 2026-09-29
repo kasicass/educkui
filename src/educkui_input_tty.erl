@@ -9,7 +9,7 @@
 
 -include("educkui.hrl").
 
--export([new/0, poll/2, mode/1, stop/1, feed/2]).
+-export([new/0, poll/2, mode/1, stop/1, feed/2, flush_partial/1]).
 -export([start_reader/1]).
 
 %% ---------------------------------------------------------------------------
@@ -42,6 +42,10 @@ poll(State, Timeout) ->
 -spec feed(map(), binary()) -> {[#dui_event{}], map()}.
 feed(State, Data) when is_binary(Data) ->
     {[educkui_event:custom(line, Data)], State}.
+
+%% @doc TTY input has no partial-escape buffering; nothing to flush.
+-spec flush_partial(map()) -> {[#dui_event{}], map()}.
+flush_partial(State) -> {[], State}.
 
 -spec mode(map()) -> tty.
 mode(_State) -> tty.

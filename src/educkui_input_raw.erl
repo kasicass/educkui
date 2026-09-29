@@ -10,7 +10,7 @@
 
 -include("educkui.hrl").
 
--export([new/0, poll/2, mode/1, stop/1, feed/2]).
+-export([new/0, poll/2, mode/1, stop/1, feed/2, flush_partial/1]).
 -export([start_reader/1]).
 
 %% ---------------------------------------------------------------------------
@@ -50,6 +50,17 @@ feed(#{buffer := Buffer, event_queue := Queue} = State, Data) when is_binary(Dat
     Combined = <<Buffer/binary, Data/binary>>,
     {Events, Remaining} = educkui_escape_parser:parse(Combined),
     {Queue ++ Events, State#{buffer := Remaining, event_queue := []}}.
+
+%% @doc Flushes a buffered partial escape sequence after the escape timeout.
+%% A lone ESC is emitted as an `esc` key; other incomplete sequences are
+%% dropped (defensive).
+-spec flush_partial(map()) -> {[#dui_event{}], map()}.
+flush_partial(#{buffer := <<27>>} = State) ->
+    {[educkui_event:key(esc)], State#{buffer := <<>>}};
+flush_partial(#{buffer := <<27, _/binary>>} = State) ->
+    {[educkui_event:key(esc)], State#{buffer := <<>>}};
+flush_partial(State) ->
+    {[], State}.
 
 -spec mode(map()) -> raw.
 mode(_State) -> raw.

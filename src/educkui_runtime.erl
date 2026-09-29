@@ -203,6 +203,8 @@ handle_info({educkui_input, eof}, State) ->
 handle_info({educkui_input, Data}, State) when is_binary(Data) ->
     State1 = feed_input(State, Data),
     {noreply, State1};
+handle_info(flush_escape, State) ->
+    {noreply, flush_escape(State)};
 handle_info({educkui_command, quit}, State) ->
     {stop, normal, State};
 handle_info({command_result, ComponentId, Result}, State) ->
@@ -386,12 +388,46 @@ feed_input(#dui_runtime_state{input_handler = Handler, input_state = InputState}
         undefined ->
             State;
         _ ->
+            State0 = cancel_escape_timer(State),
             {Events, NewInputState} = Handler:feed(InputState, Data),
+            State1 = lists:foldl(
+                fun(Event, AccState) -> process_event(Event, AccState) end,
+                State0#dui_runtime_state{input_state = NewInputState},
+                Events),
+            schedule_escape_flush(State1)
+    end.
+
+%% @doc Flushes a buffered partial escape sequence (lone ESC) into an `esc`
+%% key event once the escape timeout has elapsed.
+-spec flush_escape(#dui_runtime_state{}) -> #dui_runtime_state{}.
+flush_escape(#dui_runtime_state{input_handler = Handler, input_state = InputState} = State) ->
+    State0 = State#dui_runtime_state{escape_timer = undefined},
+    case Handler of
+        undefined -> State0;
+        _ ->
+            {Events, NewInputState} = Handler:flush_partial(InputState),
             lists:foldl(
                 fun(Event, AccState) -> process_event(Event, AccState) end,
-                State#dui_runtime_state{input_state = NewInputState},
+                State0#dui_runtime_state{input_state = NewInputState},
                 Events)
     end.
+
+-spec schedule_escape_flush(#dui_runtime_state{}) -> #dui_runtime_state{}.
+schedule_escape_flush(#dui_runtime_state{input_state = InputState} = State) ->
+    Buffer = maps:get(buffer, InputState, <<>>),
+    case Buffer of
+        <<>> -> State;
+        _ ->
+            Timer = erlang:send_after(50, self(), flush_escape),
+            State#dui_runtime_state{escape_timer = Timer}
+    end.
+
+-spec cancel_escape_timer(#dui_runtime_state{}) -> #dui_runtime_state{}.
+cancel_escape_timer(#dui_runtime_state{escape_timer = undefined} = State) ->
+    State;
+cancel_escape_timer(#dui_runtime_state{escape_timer = Timer} = State) ->
+    _ = erlang:cancel_timer(Timer),
+    State#dui_runtime_state{escape_timer = undefined}.
 
 %% ---------------------------------------------------------------------------
 %% Rendering
