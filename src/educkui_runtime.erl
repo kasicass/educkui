@@ -164,6 +164,11 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
         shortcuts = proplists:get_value(shortcuts, Merged, [])
     },
 
+    _ = case TerminalStarted of
+        true -> educkui_signal_handler:install(self());
+        false -> ok
+    end,
+
     erlang:send_after(RenderInterval, self(), render_tick),
 
     State1 = execute_commands(root, InitCommands, State),
@@ -206,6 +211,8 @@ handle_info({educkui_input, Data}, State) when is_binary(Data) ->
     {noreply, State1};
 handle_info(flush_escape, State) ->
     {noreply, flush_escape(State)};
+handle_info({educkui_sigwinch}, State) ->
+    {noreply, handle_sigwinch(State)};
 handle_info({educkui_command, quit}, State) ->
     {stop, normal, State};
 handle_info({command_result, ComponentId, Result}, State) ->
@@ -387,16 +394,30 @@ execute_commands(ComponentId, Commands, State) ->
 
 -spec handle_resize(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
 handle_resize(#dui_event{width = W, height = H}, State) when W > 0, H > 0 ->
-    {ok, NewCur} = educkui_buffer:resize(State#dui_runtime_state.current_buffer, H, W),
-    {ok, NewPrev} = educkui_buffer:resize(State#dui_runtime_state.previous_buffer, H, W),
+    apply_resize(State, H, W);
+handle_resize(_Event, State) ->
+    State.
+
+%% @doc Handles a SIGWINCH notification by re-detecting the terminal size.
+-spec handle_sigwinch(#dui_runtime_state{}) -> #dui_runtime_state{}.
+handle_sigwinch(State) ->
+    {ok, {Rows, Cols}} = educkui_terminal_size:detect(),
+    case State#dui_runtime_state.dimensions of
+        {Rows, Cols} -> State;
+        _ -> apply_resize(State, Rows, Cols)
+    end.
+
+-spec apply_resize(#dui_runtime_state{}, pos_integer(), pos_integer()) ->
+    #dui_runtime_state{}.
+apply_resize(State, Rows, Cols) ->
+    {ok, NewCur} = educkui_buffer:resize(State#dui_runtime_state.current_buffer, Rows, Cols),
+    {ok, NewPrev} = educkui_buffer:resize(State#dui_runtime_state.previous_buffer, Rows, Cols),
     State#dui_runtime_state{
-        dimensions = {H, W},
+        dimensions = {Rows, Cols},
         current_buffer = NewCur,
         previous_buffer = NewPrev,
         dirty = true
-    };
-handle_resize(_Event, State) ->
-    State.
+    }.
 
 -spec feed_input(#dui_runtime_state{}, binary()) -> #dui_runtime_state{}.
 feed_input(#dui_runtime_state{input_handler = Handler, input_state = InputState} = State,
@@ -515,6 +536,7 @@ create_buffers({Rows, Cols}) ->
 
 -spec cleanup(#dui_runtime_state{}) -> ok.
 cleanup(State) ->
+    catch educkui_signal_handler:uninstall(self()),
     catch stop_reader(State#dui_runtime_state.input_reader),
     catch shutdown_backend(State#dui_runtime_state.backend, State#dui_runtime_state.backend_state),
     catch restore_terminal(State#dui_runtime_state.terminal_started),

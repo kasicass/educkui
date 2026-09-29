@@ -35,6 +35,18 @@ skip_terminal_backend_mode_test() ->
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
+resize_event_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_counter}, {skip_terminal, true}]),
+    ok = educkui_runtime:sync(Pid),
+    S0 = educkui_runtime:get_state(Pid),
+    ?assertEqual({24, 80}, S0#dui_runtime_state.dimensions),
+    educkui_runtime:send_event(Pid, educkui_event:resize(120, 40)),
+    ok = educkui_runtime:sync(Pid),
+    S1 = educkui_runtime:get_state(Pid),
+    ?assertEqual({40, 120}, S1#dui_runtime_state.dimensions),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
 wait_for_exit(Pid) ->
     Ref = erlang:monitor(process, Pid),
     receive
