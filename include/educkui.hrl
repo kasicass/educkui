@@ -78,6 +78,37 @@
 }).
 
 %% ---------------------------------------------------------------------------
+%% Screen buffer (ETS-backed)
+%% ---------------------------------------------------------------------------
+-record(dui_buffer, {
+    table :: ets:tid() | undefined,
+    rows = 0 :: non_neg_integer(),
+    cols = 0 :: non_neg_integer()
+}).
+
+%% ---------------------------------------------------------------------------
+%% Cursor optimizer state
+%% ---------------------------------------------------------------------------
+-record(dui_cursor, {
+    row = 1 :: pos_integer(),
+    col = 1 :: pos_integer(),
+    bytes_saved = 0 :: non_neg_integer()
+}).
+
+%% ---------------------------------------------------------------------------
+%% Escape sequence buffer
+%% ---------------------------------------------------------------------------
+-record(dui_seqbuf, {
+    buffer = [] :: iodata(),
+    size = 0 :: non_neg_integer(),
+    threshold = 4096 :: pos_integer(),
+    pending_sgr = [] :: [string()],
+    last_style :: term() | undefined,
+    total_bytes = 0 :: non_neg_integer(),
+    flush_count = 0 :: non_neg_integer()
+}).
+
+%% ---------------------------------------------------------------------------
 %% Runtime state
 %% ---------------------------------------------------------------------------
 -record(dui_runtime_state, {
