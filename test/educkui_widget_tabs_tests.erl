@@ -25,6 +25,12 @@ view_test() ->
     %% header + content
     ?assertEqual(2, length(Node#dui_node.children)).
 
+view_empty_tabs_test() ->
+    S = educkui_widget_tabs:init([{tabs, []}]),
+    Node = educkui_widget_tabs:view(S),
+    ?assertEqual(stack, Node#dui_node.type),
+    ?assertEqual(2, length(Node#dui_node.children)).
+
 view_active_content_test() ->
     {S, []} = educkui_widget_tabs:update(next,
         educkui_widget_tabs:init([{tabs, tabs()}])),

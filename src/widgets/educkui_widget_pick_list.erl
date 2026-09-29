@@ -125,7 +125,7 @@ view(State) ->
                     end,
                     educkui_render_node:text(Text, Style)
                 end,
-                lists:zip(Filtered, lists:seq(0, max(0, length(Filtered) - 1)))),
+                lists:zip(Filtered, lists:seq(0, length(Filtered) - 1))),
             educkui_render_node:stack(vertical, [Header | ItemNodes])
     end.
 

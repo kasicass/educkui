@@ -58,7 +58,7 @@ view(State) ->
             end,
             educkui_render_node:text(<<Title/binary, " ">>, Style)
         end,
-        lists:zip(Tabs, lists:seq(0, max(0, length(Tabs) - 1)))),
+        lists:zip(Tabs, lists:seq(0, length(Tabs) - 1))),
     Header = educkui_render_node:stack(horizontal, Titles),
     Content = case Tabs of
         [] -> educkui_render_node:empty();

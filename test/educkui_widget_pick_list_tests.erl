@@ -44,6 +44,14 @@ focus_test() ->
     {S2, []} = educkui_widget_pick_list:update(focus_lost, S1),
     ?assertEqual(false, maps:get(focused, S2)).
 
+view_empty_filter_test() ->
+    S0 = educkui_widget_pick_list:init([{items, [<<"apple">>, <<"banana">>]}]),
+    {S1, []} = educkui_widget_pick_list:update(focus_gained, S0),
+    {S2, []} = educkui_widget_pick_list:update({filter_char, <<"zzz">>}, S1),
+    Node = educkui_widget_pick_list:view(S2),
+    ?assertEqual(stack, Node#dui_node.type),
+    ?assertEqual(1, length(Node#dui_node.children)).
+
 view_unfocused_test() ->
     S = educkui_widget_pick_list:init([{items, [<<"apple">>]}, {prompt, <<"F: ">>}]),
     Node = educkui_widget_pick_list:view(S),
