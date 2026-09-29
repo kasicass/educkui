@@ -13,7 +13,7 @@
     {route, term(), #dui_event{}} | ignore.
 route(#dui_event{type = mouse, x = X, y = Y} = Event, _Focus, Targets) ->
     case educkui_mouse:find_target(X, Y, Targets) of
-        {ok, Id} -> {route, Id, Event};
+        {ok, Id, _Rect} -> {route, Id, Event};
         none -> ignore
     end;
 route(#dui_event{type = key} = Event, Focus, _Targets) ->

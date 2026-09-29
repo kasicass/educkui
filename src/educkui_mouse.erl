@@ -9,13 +9,18 @@
 point_in_rect(X, Y, #dui_rect{x = Rx, y = Ry, width = W, height = H}) ->
     X >= Rx andalso X < Rx + W andalso Y >= Ry andalso Y < Ry + H.
 
-%% @doc Returns the first target id whose rect contains the point.
-%% `Targets` is a list of `{Id, Rect}` tuples.
+%% @doc Returns the first target whose rect contains the point, together with
+%% the matching rect. Targets are searched in reverse order so that later
+%% (topmost, e.g. overlay) targets take priority over earlier ones.
 -spec find_target(integer(), integer(), [{term(), #dui_rect{}}]) ->
-    {ok, term()} | none.
-find_target(_X, _Y, []) -> none;
-find_target(X, Y, [{Id, Rect} | Rest]) ->
+    {ok, term(), #dui_rect{}} | none.
+find_target(X, Y, Targets) ->
+    find_target_rev(X, Y, lists:reverse(Targets)).
+
+find_target_rev(_X, _Y, []) ->
+    none;
+find_target_rev(X, Y, [{Id, Rect} | Rest]) ->
     case point_in_rect(X, Y, Rect) of
-        true -> {ok, Id};
-        false -> find_target(X, Y, Rest)
+        true -> {ok, Id, Rect};
+        false -> find_target_rev(X, Y, Rest)
     end.

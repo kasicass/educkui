@@ -42,6 +42,20 @@ focus_cycle_and_editing_test() ->
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
+mouse_click_sets_cursor_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_form}, {skip_terminal, true}]),
+    ok = educkui_runtime:force_render(Pid),
+    ok = educkui_runtime:sync(Pid),
+    %% name_input sits at row 1 (0-based y=1), x=0. Click at x=2 sets the
+    %% cursor to local column 2.
+    educkui_runtime:send_event(Pid, educkui_event:mouse(press, left, 2, 1)),
+    ok = educkui_runtime:sync(Pid),
+    S = educkui_runtime:get_state(Pid),
+    NameComp = maps:get(name_input, S#dui_runtime_state.components),
+    ?assertEqual(2, maps:get(cursor, NameComp#dui_component.state)),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
 mouse_click_focuses_component_test() ->
     {ok, Pid} = educkui_runtime:start_link([{root, dui_form}, {skip_terminal, true}]),
     ok = educkui_runtime:force_render(Pid),

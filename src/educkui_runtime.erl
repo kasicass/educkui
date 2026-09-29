@@ -298,7 +298,12 @@ process_other_event(#dui_event{type = resize} = Event, State) ->
     handle_resize(Event, State);
 process_other_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Event, State) ->
     case educkui_mouse:find_target(X, Y, State#dui_runtime_state.targets) of
-        {ok, Id} ->
+        {ok, Id, Rect} ->
+            %% Translate screen coordinates to component-local coordinates.
+            LocalEvent = Event#dui_event{
+                x = X - Rect#dui_rect.x,
+                y = Y - Rect#dui_rect.y
+            },
             OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
             State1 = State#dui_runtime_state{
                 focus = educkui_focus:focus(State#dui_runtime_state.focus, Id)},
@@ -307,7 +312,7 @@ process_other_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Eve
                 false -> dispatch(OldFocus, educkui_event:focus(lost), State1)
             end,
             State3 = dispatch(Id, educkui_event:focus(gained), State2),
-            dispatch(Id, Event, State3);
+            dispatch(Id, LocalEvent, State3);
         none ->
             State
     end;

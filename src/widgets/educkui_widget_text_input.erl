@@ -44,6 +44,8 @@ event_to_msg(#dui_event{type = key, key = Key, char = Char}, _State) ->
     end;
 event_to_msg(#dui_event{type = focus, action = gained}, _State) -> {msg, focus_gained};
 event_to_msg(#dui_event{type = focus, action = lost}, _State) -> {msg, focus_lost};
+event_to_msg(#dui_event{type = mouse, action = press, x = X}, _State) ->
+    {msg, {cursor_set, X}};
 event_to_msg(_Event, _State) -> ignore.
 
 %% ---------------------------------------------------------------------------
@@ -84,6 +86,9 @@ update(cursor_left, State) ->
 update(cursor_right, State) ->
     {State#{cursor := min(string:length(maps:get(value, State)),
                           maps:get(cursor, State) + 1)}, []};
+update({cursor_set, X}, State) ->
+    Max = string:length(maps:get(value, State)),
+    {State#{cursor := min(Max, max(0, X))}, []};
 update(cursor_home, State) ->
     {State#{cursor := 0}, []};
 update(cursor_end, State) ->

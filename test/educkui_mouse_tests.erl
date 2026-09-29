@@ -15,6 +15,13 @@ find_target_test() ->
     R1 = #dui_rect{x = 0, y = 0, width = 10, height = 10},
     R2 = #dui_rect{x = 10, y = 0, width = 10, height = 10},
     Targets = [{a, R1}, {b, R2}],
-    ?assertEqual({ok, a}, educkui_mouse:find_target(5, 5, Targets)),
-    ?assertEqual({ok, b}, educkui_mouse:find_target(15, 5, Targets)),
+    ?assertEqual({ok, a, R1}, educkui_mouse:find_target(5, 5, Targets)),
+    ?assertEqual({ok, b, R2}, educkui_mouse:find_target(15, 5, Targets)),
     ?assertEqual(none, educkui_mouse:find_target(100, 100, Targets)).
+
+find_target_topmost_test() ->
+    %% Overlay targets (later in the list) win.
+    R1 = #dui_rect{x = 0, y = 0, width = 10, height = 10},
+    R2 = #dui_rect{x = 0, y = 0, width = 10, height = 10},
+    Targets = [{base, R1}, {overlay, R2}],
+    ?assertEqual({ok, overlay, R2}, educkui_mouse:find_target(5, 5, Targets)).
