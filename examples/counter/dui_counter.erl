@@ -32,5 +32,5 @@ view(State) ->
             <<"educkui Counter: ", (integer_to_binary(Count))/binary>>,
             educkui_style:from([{fg, cyan}, {bold, true}])),
         educkui_render_node:text(<<"">>),
-        educkui_render_node:text(<<"↑/↓ 修改计数，Q 退出"/utf8>>)
+        educkui_render_node:text(<<"Up/Down to change count, Q to quit">>)
     ]).

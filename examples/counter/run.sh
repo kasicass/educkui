@@ -12,7 +12,7 @@ mkdir -p /tmp/dui_counter_example
 erlc -I include -pa _build/default/lib/educkui/ebin \
     -o /tmp/dui_counter_example examples/counter/dui_counter.erl
 
-echo "==> running (press ↑/↓ to change the counter, Q to quit)"
+echo "==> running (press Up/Down to change the counter, Q to quit)"
 erl -noshell \
     -pa /tmp/dui_counter_example \
     -pa _build/default/lib/educkui/ebin \

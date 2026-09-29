@@ -13,5 +13,5 @@ Run it in a real terminal:
 ./examples/counter/run.sh
 ```
 
-Use ↑/↓ to change the counter, press `Q` to quit. The terminal is restored
+Use Up/Down to change the counter, press `Q` to quit. The terminal is restored
 cleanly on exit.
