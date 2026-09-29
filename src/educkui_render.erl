@@ -202,6 +202,16 @@ nat_size(#dui_node{type = widget, module = Mod, props = Props,
     {Size, Components1} = nat_size(Sub, Components),
     {{apply_size(W, element(1, Size)), apply_size(H, element(2, Size))},
      Components1};
+nat_size(#dui_node{type = overlay, children = Children, width = W, height = H},
+         Components) ->
+    {Sizes, Components1} =
+        lists:mapfoldl(fun(C, Acc) -> nat_size(C, Acc) end, Components, Children),
+    W1 = case Sizes of [] -> 0; _ -> lists:max([SW || {SW, _} <- Sizes]) end,
+    H1 = case Sizes of [] -> 0; _ -> lists:max([SH || {_, SH} <- Sizes]) end,
+    {{apply_size(W, W1), apply_size(H, H1)}, Components1};
+nat_size(#dui_node{type = at, x = Ax, y = Ay, children = [Child]}, Components) ->
+    {Size, Components1} = nat_size(Child, Components),
+    {{Ax + element(1, Size), Ay + element(2, Size)}, Components1};
 nat_size(#dui_node{type = Type, children = Children, direction = Direction,
                    width = W, height = H}, Components)
         when Type =:= box; Type =:= stack ->

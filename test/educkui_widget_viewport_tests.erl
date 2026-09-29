@@ -31,3 +31,11 @@ scrolled_test() ->
     %% "row1" is now at y=0.
     ?assertEqual({ok, <<"r">>}, char_at(Cells, 0, 0)),
     ?assertEqual(missing, char_at(Cells, 0, 3)).
+
+clips_to_viewport_height_test() ->
+    %% Content taller than the viewport must be clipped to the viewport rect.
+    Node = educkui_widget_viewport:render(
+        #{content => content(), scroll_y => 0, content_height => 10},
+        #dui_rect{width = 10, height = 2}),
+    Cells = Node#dui_node.cells,
+    ?assertEqual(missing, char_at(Cells, 0, 2)).

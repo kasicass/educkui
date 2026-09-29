@@ -23,7 +23,11 @@ render(Props, Rect) ->
         Content,
         #dui_rect{x = 0, y = -ScrollY, width = Rect#dui_rect.width,
                   height = ContentHeight}),
-    educkui_render_node:cells(Cells).
+    %% Clip to this viewport's own rect (relative y in [0, height-1]).
+    Clipped = [{X, Y, Cell}
+               || {X, Y, Cell} <- Cells,
+                  Y >= 0, Y < Rect#dui_rect.height],
+    educkui_render_node:cells(Clipped).
 
 -spec describe() -> map().
 describe() ->
