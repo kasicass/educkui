@@ -26,7 +26,7 @@ concurrency — to write robust terminal applications using
   area, pick list, scrollable list, table, tabs, split pane, tree view,
   viewport, scroll bar, dialog, alert dialog, toast, context menu, gauge,
   line chart, sparkline, bar chart, canvas, process monitor, supervision
-  tree viewer, log viewer
+  tree viewer, log viewer, form builder, stream
 
 ## Requirements
 
@@ -82,6 +82,8 @@ See `examples/` for runnable demos:
 | `picklist` | pick list with type-ahead filtering |
 | `ide` | split pane + tree + editor |
 | `dialog` | dialog, toast, context menu |
+| `form_builder` | text/password/checkbox/radio/select/multi-select form |
+| `stream` | bounded streaming buffer with live stats |
 
 Run any of them with `./examples/<name>/run.sh`.
 

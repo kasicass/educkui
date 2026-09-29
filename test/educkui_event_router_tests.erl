@@ -33,3 +33,8 @@ paste_to_focused_test() ->
     Event = educkui_event:paste(<<"x">>),
     ?assertEqual({route, input, Event},
                  educkui_event_router:route(Event, Focus, [])).
+
+message_to_component_test() ->
+    Event = educkui_event:custom(message, {stream, {stream_item, <<"x">>}}),
+    ?assertEqual({route, stream, Event},
+                 educkui_event_router:route(Event, educkui_focus:new(), [])).

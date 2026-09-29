@@ -26,5 +26,10 @@ route(#dui_event{type = paste} = Event, Focus, _Targets) ->
         undefined -> ignore;
         Id -> {route, Id, Event}
     end;
+%% Messages addressed to a specific component (`educkui_runtime:send_message/3`)
+%% are routed to that component regardless of focus.
+route(#dui_event{type = custom, key = message, content = {Id, _Msg}} = Event,
+      _Focus, _Targets) ->
+    {route, Id, Event};
 route(_Event, _Focus, _Targets) ->
     ignore.
