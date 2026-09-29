@@ -48,21 +48,21 @@ render_component(#dui_node{component_id = Id, module = Mod, props = Props},
 -spec render_box(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->
     {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
-render_box(#dui_node{style = Style, children = Children}, X, Y, W, H, Components) ->
+render_box(#dui_node{style = Style, children = Children, align = Align},
+           X, Y, W, H, Components) ->
     Background = fill_background(Style, X, Y, W, H),
+    Rects = layout_children(vertical, X, Y, W, H, Children, Align),
     {Cells, Components1, Targets, Order} =
-        render_children(Children, vertical_rects(X, Y, W, H, Children), Components),
+        render_children(Children, Rects, Components),
     {Background ++ Cells, Components1, Targets, Order}.
 
 -spec render_stack(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->
     {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
-render_stack(#dui_node{direction = vertical, children = Children},
+render_stack(#dui_node{direction = Direction, children = Children, align = Align},
              X, Y, W, H, Components) ->
-    render_children(Children, vertical_rects(X, Y, W, H, Children), Components);
-render_stack(#dui_node{direction = horizontal, children = Children},
-             X, Y, W, H, Components) ->
-    render_children(Children, horizontal_rects(X, Y, W, H, Children), Components).
+    Rects = layout_children(Direction, X, Y, W, H, Children, Align),
+    render_children(Children, Rects, Components).
 
 -spec render_children([#dui_node{}], [#dui_rect{}], map()) ->
     {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
@@ -76,22 +76,72 @@ render_children(Children, Rects, Components) ->
         zip_short(Children, Rects)).
 
 %% ---------------------------------------------------------------------------
-%% Layout (simple: vertical = 1 row each, horizontal = equal split)
+%% Layout (flex solver + alignment)
 %% ---------------------------------------------------------------------------
 
--spec vertical_rects(integer(), integer(), non_neg_integer(), non_neg_integer(),
-    [#dui_node{}]) -> [#dui_rect{}].
-vertical_rects(X, Y, W, H, Children) ->
-    [#dui_rect{x = X, y = Y + J, width = W, height = 1}
-     || J <- lists:seq(0, max(0, H - 1)), J < length(Children)].
+-spec layout_children(vertical | horizontal, integer(), integer(),
+    non_neg_integer(), non_neg_integer(), [#dui_node{}], atom()) -> [#dui_rect{}].
+layout_children(vertical, X, Y, W, H, Children, Align) ->
+    Constraints = [height_constraint(C) || C <- Children],
+    Sizes = educkui_layout_solver:solve(H, Constraints),
+    Offsets = educkui_layout_solver:align(align_or(Align), H, Sizes),
+    [#dui_rect{x = X, y = Y + Off, width = W, height = Size}
+     || {Off, Size} <- zip_short(Offsets, Sizes)];
+layout_children(horizontal, X, Y, W, H, Children, Align) ->
+    Constraints = [width_constraint(C) || C <- Children],
+    Sizes = educkui_layout_solver:solve(W, Constraints),
+    Offsets = educkui_layout_solver:align(align_or(Align), W, Sizes),
+    [#dui_rect{x = X + Off, y = Y, width = Size, height = H}
+     || {Off, Size} <- zip_short(Offsets, Sizes)].
 
--spec horizontal_rects(integer(), integer(), non_neg_integer(), non_neg_integer(),
-    [#dui_node{}]) -> [#dui_rect{}].
-horizontal_rects(X, Y, W, H, Children) ->
-    N = max(1, length(Children)),
-    ChildW = W div N,
-    [#dui_rect{x = X + I * ChildW, y = Y, width = ChildW, height = H}
-     || I <- lists:seq(0, N - 1)].
+-spec height_constraint(#dui_node{}) -> educkui_layout_constraint:constraint().
+height_constraint(#dui_node{height = auto}) -> {flex, 1};
+height_constraint(#dui_node{height = N}) when is_integer(N), N >= 0 -> {fixed, N};
+height_constraint(Node) -> {fixed, element(2, nat_size(Node))}.
+
+-spec width_constraint(#dui_node{}) -> educkui_layout_constraint:constraint().
+width_constraint(#dui_node{width = auto}) -> {flex, 1};
+width_constraint(#dui_node{width = N}) when is_integer(N), N >= 0 -> {fixed, N};
+width_constraint(Node) -> {fixed, element(1, nat_size(Node))}.
+
+%% @doc Natural (preferred) size of a node in cells.
+-spec nat_size(#dui_node{}) -> {non_neg_integer(), non_neg_integer()}.
+nat_size(#dui_node{type = text, content = Content, width = W, height = H}) ->
+    Lines = binary:split(Content, <<"\n">>, [global]),
+    W1 = case Lines of
+        [] -> 0;
+        _ -> lists:max([educkui_display_width:string_width(L) || L <- Lines])
+    end,
+    {apply_size(W, W1), apply_size(H, max(1, length(Lines)))};
+nat_size(#dui_node{type = empty, width = W, height = H}) ->
+    {apply_size(W, 0), apply_size(H, 0)};
+nat_size(#dui_node{type = cells, cells = Cells, width = W, height = H}) ->
+    W1 = case Cells of [] -> 0; _ -> lists:max([Cx + 1 || {Cx, _, _} <- Cells]) end,
+    H1 = case Cells of [] -> 0; _ -> lists:max([Cy + 1 || {_, Cy, _} <- Cells]) end,
+    {apply_size(W, W1), apply_size(H, H1)};
+nat_size(#dui_node{type = Type, children = Children, direction = Direction,
+                   width = W, height = H})
+        when Type =:= box; Type =:= stack ->
+    Sizes = [nat_size(C) || C <- Children],
+    W1 = case Sizes of [] -> 0; _ -> lists:max([SW || {SW, _} <- Sizes]) end,
+    H1 = case Direction of
+        horizontal -> case Sizes of [] -> 0; _ -> lists:max([SH || {_, SH} <- Sizes]) end;
+        _ -> lists:sum([SH || {_, SH} <- Sizes])
+    end,
+    {apply_size(W, W1), apply_size(H, H1)};
+nat_size(#dui_node{width = W, height = H}) ->
+    %% component / unknown node: assume a single cell.
+    {apply_size(W, 1), apply_size(H, 1)}.
+
+-spec apply_size(term(), non_neg_integer()) -> non_neg_integer().
+apply_size(undefined, Nat) -> Nat;
+apply_size(auto, Nat) -> Nat;
+apply_size(N, _Nat) when is_integer(N), N >= 0 -> N;
+apply_size(_N, Nat) -> Nat.
+
+-spec align_or(atom() | undefined) -> start | center | 'end' | space_between.
+align_or(undefined) -> start;
+align_or(Align) -> Align.
 
 %% ---------------------------------------------------------------------------
 %% Leaf renderers (cells only)

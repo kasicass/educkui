@@ -74,6 +74,7 @@
     direction :: vertical | horizontal | undefined,
     width :: non_neg_integer() | auto | undefined,
     height :: non_neg_integer() | auto | undefined,
+    align :: start | center | 'end' | space_between | undefined,
     cells :: [{integer(), integer(), term()}] | undefined,
     component_id :: term() | undefined,
     module :: module() | undefined,

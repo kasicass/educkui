@@ -40,7 +40,8 @@ box(Children, Opts) when is_list(Children) ->
         children = Children,
         style = proplists:get_value(style, Opts),
         width = proplists:get_value(width, Opts),
-        height = proplists:get_value(height, Opts)
+        height = proplists:get_value(height, Opts),
+        align = proplists:get_value(align, Opts)
     }.
 
 -spec stack(vertical | horizontal, [#dui_node{}]) -> #dui_node{}.
@@ -56,7 +57,8 @@ stack(Direction, Children, Opts)
         children = Children,
         style = proplists:get_value(style, Opts),
         width = proplists:get_value(width, Opts),
-        height = proplists:get_value(height, Opts)
+        height = proplists:get_value(height, Opts),
+        align = proplists:get_value(align, Opts)
     }.
 
 -spec cells([{integer(), integer(), #dui_cell{}}]) -> #dui_node{}.
