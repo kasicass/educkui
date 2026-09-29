@@ -1,0 +1,12 @@
+%% -*- erlang -*-
+{application, educkui, [
+    {description, "A pure Erlang terminal UI (TUI) framework"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {educkui_app, []}},
+    {applications, [kernel, stdlib]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, []}
+]}.
