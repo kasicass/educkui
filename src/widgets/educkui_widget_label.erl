@@ -73,7 +73,8 @@ align_text(Text, Width, Align) ->
 truncate_ellipsis(Text, Width) when Width =< 3 ->
     string:slice(Text, 0, Width);
 truncate_ellipsis(Text, Width) ->
-    <<(string:slice(Text, 0, Width - 1))/binary, "…">>.
+    Ellipsis = <<"…"/utf8>>,
+    <<(string:slice(Text, 0, Width - 1))/binary, Ellipsis/binary>>.
 
 -spec wrap_text(binary(), non_neg_integer()) -> [binary()].
 wrap_text(Text, Width) when Width > 0 ->

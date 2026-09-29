@@ -35,6 +35,14 @@ truncate_test() ->
     ?assertEqual(<<"e">>, char_n(Cells, 2)),
     ?assertEqual(<<"l">>, char_n(Cells, 3)).
 
+truncate_ellipsis_test() ->
+    Cells = render_label(#{text => <<"Hello">>, truncate => true}, 4),
+    ?assertEqual(4, length(Cells)),
+    ?assertEqual(<<"H">>, char_n(Cells, 1)),
+    ?assertEqual(<<"e">>, char_n(Cells, 2)),
+    ?assertEqual(<<"l">>, char_n(Cells, 3)),
+    ?assertEqual(<<"…"/utf8>>, char_n(Cells, 4)).
+
 style_test() ->
     Cells = render_label(#{text => <<"A">>, style => #{fg => red}}, 1),
     {_X, _Y, Cell} = hd(Cells),
