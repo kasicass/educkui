@@ -160,7 +160,8 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
         dirty = true,
         last_render = undefined,
         focus = [root],
-        targets = []
+        targets = [],
+        shortcuts = proplists:get_value(shortcuts, Merged, [])
     },
 
     erlang:send_after(RenderInterval, self(), render_tick),
@@ -266,11 +267,27 @@ init_input(BackendMode) when BackendMode =:= raw; BackendMode =:= tty ->
 %% ---------------------------------------------------------------------------
 
 -spec process_event(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
-process_event(#dui_event{type = resize} = Event, State) ->
-    handle_resize(Event, State);
-process_event(#dui_event{type = key, key = tab, modifiers = Mods}, State) ->
+process_event(#dui_event{type = key} = Event, State) ->
+    %% Global shortcuts take precedence over component routing.
+    case educkui_shortcut:find(Event, State#dui_runtime_state.shortcuts) of
+        {ok, Command} ->
+            execute_commands(root, [Command], State);
+        none ->
+            process_key_event(Event, State)
+    end;
+process_event(Event, State) ->
+    process_other_event(Event, State).
+
+-spec process_key_event(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
+process_key_event(#dui_event{key = tab, modifiers = Mods}, State) ->
     handle_tab(lists:member(shift, Mods), State);
-process_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Event, State) ->
+process_key_event(Event, State) ->
+    process_other_event(Event, State).
+
+-spec process_other_event(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
+process_other_event(#dui_event{type = resize} = Event, State) ->
+    handle_resize(Event, State);
+process_other_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Event, State) ->
     case educkui_mouse:find_target(X, Y, State#dui_runtime_state.targets) of
         {ok, Id} ->
             OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
@@ -285,7 +302,7 @@ process_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Event, St
         none ->
             State
     end;
-process_event(Event, State) ->
+process_other_event(Event, State) ->
     case educkui_event_router:route(Event, State#dui_runtime_state.focus,
                                     State#dui_runtime_state.targets) of
         ignore -> State;

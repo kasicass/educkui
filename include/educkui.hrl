@@ -148,7 +148,8 @@
     targets = [] :: [{term(), term()}],
     components = #{} :: map(),        %% Id => #dui_component{}
     focus_order = [] :: [term()],
-    escape_timer :: reference() | undefined
+    escape_timer :: reference() | undefined,
+    shortcuts = [] :: [{term(), term()}]
 }).
 
 -endif.
