@@ -294,7 +294,8 @@ dispatch_root(Event, State) ->
 execute_commands(_ComponentId, [], State) ->
     State;
 execute_commands(ComponentId, Commands, State) ->
-    educkui_command_executor:execute(ComponentId, Commands, self()),
+    educkui_command_executor:execute(
+        State#dui_runtime_state.command_executor, ComponentId, Commands, self()),
     State.
 
 -spec handle_resize(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
@@ -338,7 +339,9 @@ do_render(#dui_runtime_state{root_module = RootModule, root_state = RootState,
     Cur = State#dui_runtime_state.current_buffer,
     Prev = State#dui_runtime_state.previous_buffer,
     educkui_buffer:clear(Cur),
-    educkui_buffer:set_cells(Cur, [{X + 1, Y + 1, Cell} || {X, Y, Cell} <- Cells]),
+    %% `educkui_render:render/2` returns `{Col, Row, Cell}` (0-based), while
+    %% `educkui_buffer:set_cells/2` expects `{Row, Col, Cell}` (1-based).
+    educkui_buffer:set_cells(Cur, [{Y + 1, X + 1, Cell} || {X, Y, Cell} <- Cells]),
 
     State1 = output_changed(State, changed_cells(Cur, Prev, Rows, Cols)),
     State1#dui_runtime_state{

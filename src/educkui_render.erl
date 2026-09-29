@@ -26,9 +26,27 @@ render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H}) ->
 -spec render_text(#dui_node{}, integer(), integer(), non_neg_integer()) ->
     [{integer(), integer(), #dui_cell{}}].
 render_text(#dui_node{content = Content, style = Style}, X, Y, W) when W > 0 ->
-    Graphemes = lists:sublist(string:to_graphemes(Content), W),
-    [{X + I, Y, grapheme_cell(G, Style)}
-     || {I, G} <- zip_short(lists:seq(0, W - 1), Graphemes)];
+    %% Truncate by display width (grapheme boundaries preserved).
+    {Truncated, _} = educkui_display_width:truncate(Content, W),
+    Graphemes = string:to_graphemes(Truncated),
+    %% Place each grapheme at the current display column, advancing by its
+    %% width and emitting a placeholder for the second column of wide chars.
+    {RevCells, _} = lists:foldl(
+        fun(G, {Acc, CurX}) ->
+            Cell = grapheme_cell(G, Style),
+            Width = educkui_cell:width(Cell),
+            NewAcc = case Width >= 2 andalso CurX + 1 < X + W of
+                true ->
+                    Placeholder = educkui_cell:wide_placeholder(Cell),
+                    [{CurX + 1, Y, Placeholder}, {CurX, Y, Cell} | Acc];
+                false ->
+                    [{CurX, Y, Cell} | Acc]
+            end,
+            {NewAcc, CurX + Width}
+        end,
+        {[], X},
+        Graphemes),
+    lists:reverse(RevCells);
 render_text(_Node, _X, _Y, _W) ->
     [].
 

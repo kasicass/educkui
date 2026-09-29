@@ -7,7 +7,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, execute/3]).
+-export([start_link/0, execute/4]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
 %% ---------------------------------------------------------------------------
@@ -16,12 +16,13 @@
 
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link(?MODULE, [], []).
 
 %% @doc Executes `Commands` for `ComponentId`, sending results to `Runtime`.
--spec execute(term(), [term()], pid()) -> ok.
-execute(ComponentId, Commands, Runtime) when is_list(Commands), is_pid(Runtime) ->
-    gen_server:cast(?MODULE, {execute, ComponentId, Commands, Runtime}).
+-spec execute(pid(), term(), [term()], pid()) -> ok.
+execute(Executor, ComponentId, Commands, Runtime)
+        when is_pid(Executor), is_list(Commands), is_pid(Runtime) ->
+    gen_server:cast(Executor, {execute, ComponentId, Commands, Runtime}).
 
 %% ---------------------------------------------------------------------------
 %% gen_server callbacks

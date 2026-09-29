@@ -19,9 +19,13 @@ counter_renders_buffer_test() ->
     ok = educkui_runtime:force_render(Pid),
     ok = educkui_runtime:sync(Pid),
     State = educkui_runtime:get_state(Pid),
-    %% Previous buffer holds the just-rendered frame.
+    %% Previous buffer holds the just-rendered frame. The first row must be
+    %% horizontal: "Counter: 0".
     PrevBuf = State#dui_runtime_state.previous_buffer,
     ?assertEqual(<<"C">>, (educkui_buffer:get_cell(PrevBuf, 1, 1))#dui_cell.char),
+    ?assertEqual(<<"o">>, (educkui_buffer:get_cell(PrevBuf, 1, 2))#dui_cell.char),
+    ?assertEqual(<<" ">>, (educkui_buffer:get_cell(PrevBuf, 1, 9))#dui_cell.char),
+    ?assertEqual(<<"0">>, (educkui_buffer:get_cell(PrevBuf, 1, 10))#dui_cell.char),
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
