@@ -67,14 +67,27 @@
 %% Render node
 %% ---------------------------------------------------------------------------
 -record(dui_node, {
-    type :: atom(),                   %% text | box | stack | cells | empty
+    type :: atom(),                   %% text | box | stack | cells | empty | component
     content :: binary() | undefined,
     style :: term() | undefined,      %% #dui_style{}
     children = [] :: [term()],        %% [#dui_node{}]
     direction :: vertical | horizontal | undefined,
     width :: non_neg_integer() | auto | undefined,
     height :: non_neg_integer() | auto | undefined,
-    cells :: [{integer(), integer(), term()}] | undefined
+    cells :: [{integer(), integer(), term()}] | undefined,
+    component_id :: term() | undefined,
+    module :: module() | undefined,
+    props :: map() | undefined
+}).
+
+%% ---------------------------------------------------------------------------
+%% Component instance (a node in the runtime component tree)
+%% ---------------------------------------------------------------------------
+-record(dui_component, {
+    id :: term(),
+    module :: module(),
+    state = undefined :: term(),
+    props = #{} :: map()
 }).
 
 %% ---------------------------------------------------------------------------
@@ -131,7 +144,9 @@
     dirty = false :: boolean(),
     last_render :: integer() | undefined,
     focus = [] :: [term()],
-    targets = [] :: [{term(), term()}]
+    targets = [] :: [{term(), term()}],
+    components = #{} :: map(),        %% Id => #dui_component{}
+    focus_order = [] :: [term()]
 }).
 
 -endif.

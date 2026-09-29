@@ -11,6 +11,7 @@
     box/1, box/2,
     stack/2, stack/3,
     styled/2,
+    component/2, component/3,
     empty/0,
     props/2,
     merge_styles/1,
@@ -45,6 +46,12 @@ stack(Direction, Children, Opts) -> educkui_render_node:stack(Direction, Childre
 
 -spec styled(#dui_node{}, #dui_style{}) -> #dui_node{}.
 styled(Node, Style) -> educkui_render_node:styled(Node, Style).
+
+-spec component(term(), module()) -> #dui_node{}.
+component(Id, Module) -> educkui_render_node:component(Id, Module).
+
+-spec component(term(), module(), map()) -> #dui_node{}.
+component(Id, Module, Props) -> educkui_render_node:component(Id, Module, Props).
 
 -spec empty() -> #dui_node{}.
 empty() -> educkui_render_node:empty().

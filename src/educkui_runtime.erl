@@ -266,12 +266,53 @@ init_input(BackendMode) when BackendMode =:= raw; BackendMode =:= tty ->
 -spec process_event(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
 process_event(#dui_event{type = resize} = Event, State) ->
     handle_resize(Event, State);
+process_event(#dui_event{type = key, key = tab, modifiers = Mods}, State) ->
+    handle_tab(lists:member(shift, Mods), State);
+process_event(#dui_event{type = mouse, action = press, x = X, y = Y} = Event, State) ->
+    case educkui_mouse:find_target(X, Y, State#dui_runtime_state.targets) of
+        {ok, Id} ->
+            OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
+            State1 = State#dui_runtime_state{
+                focus = educkui_focus:focus(State#dui_runtime_state.focus, Id)},
+            State2 = case OldFocus =:= Id of
+                true -> State1;
+                false -> dispatch(OldFocus, educkui_event:focus(lost), State1)
+            end,
+            State3 = dispatch(Id, educkui_event:focus(gained), State2),
+            dispatch(Id, Event, State3);
+        none ->
+            State
+    end;
 process_event(Event, State) ->
     case educkui_event_router:route(Event, State#dui_runtime_state.focus,
                                     State#dui_runtime_state.targets) of
         ignore -> State;
-        {route, root, RoutedEvent} -> dispatch_root(RoutedEvent, State);
-        {route, _Other, _RoutedEvent} -> State
+        {route, Id, RoutedEvent} -> dispatch(Id, RoutedEvent, State)
+    end.
+
+-spec dispatch(term(), #dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
+dispatch(root, Event, State) ->
+    dispatch_root(Event, State);
+dispatch(Id, Event, State) ->
+    case maps:find(Id, State#dui_runtime_state.components) of
+        {ok, Comp} ->
+            Module = Comp#dui_component.module,
+            case Module:event_to_msg(Event, Comp#dui_component.state) of
+                {msg, Msg} ->
+                    UpdateResult = Module:update(Msg, Comp#dui_component.state),
+                    {NewState, Commands} =
+                        educkui_elm:normalize_update_result(
+                            UpdateResult, Comp#dui_component.state),
+                    Comp1 = Comp#dui_component{state = NewState},
+                    State1 = State#dui_runtime_state{
+                        components = maps:put(Id, Comp1, State#dui_runtime_state.components),
+                        dirty = true},
+                    execute_commands(Id, Commands, State1);
+                ignore -> State;
+                propagate -> dispatch_root(Event, State)
+            end;
+        error ->
+            State
     end.
 
 -spec dispatch_root(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
@@ -288,6 +329,33 @@ dispatch_root(Event, State) ->
             State;
         propagate ->
             State
+    end.
+
+-spec handle_tab(boolean(), #dui_runtime_state{}) -> #dui_runtime_state{}.
+handle_tab(Shift, State) ->
+    Order = State#dui_runtime_state.focus_order,
+    OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
+    case OldFocus of
+        undefined ->
+            case Order of
+                [] -> State;
+                [First | _] ->
+                    State1 = State#dui_runtime_state{focus = [First]},
+                    dispatch(First, educkui_event:focus(gained), State1)
+            end;
+        _Current ->
+            NewFocusStack = case Shift of
+                true -> educkui_focus:prev(State#dui_runtime_state.focus, Order);
+                false -> educkui_focus:next(State#dui_runtime_state.focus, Order)
+            end,
+            NewFocus = educkui_focus:current(NewFocusStack),
+            case NewFocus =:= OldFocus of
+                true -> State;
+                false ->
+                    State1 = dispatch(OldFocus, educkui_event:focus(lost),
+                                      State#dui_runtime_state{focus = NewFocusStack}),
+                    dispatch(NewFocus, educkui_event:focus(gained), State1)
+            end
     end.
 
 -spec execute_commands(term(), [term()], #dui_runtime_state{}) -> #dui_runtime_state{}.
@@ -334,16 +402,22 @@ do_render(#dui_runtime_state{root_module = RootModule, root_state = RootState,
                              dimensions = {Rows, Cols}} = State) ->
     View = RootModule:view(RootState),
     Rect = #dui_rect{width = Cols, height = Rows},
-    Cells = educkui_render:render(View, Rect),
+    {Cells, Components, Targets, Order} =
+        educkui_render:render(View, Rect, State#dui_runtime_state.components),
 
     Cur = State#dui_runtime_state.current_buffer,
     Prev = State#dui_runtime_state.previous_buffer,
     educkui_buffer:clear(Cur),
-    %% `educkui_render:render/2` returns `{Col, Row, Cell}` (0-based), while
+    %% `educkui_render:render/3` returns `{Col, Row, Cell}` (0-based), while
     %% `educkui_buffer:set_cells/2` expects `{Row, Col, Cell}` (1-based).
     educkui_buffer:set_cells(Cur, [{Y + 1, X + 1, Cell} || {X, Y, Cell} <- Cells]),
 
-    State1 = output_changed(State, changed_cells(Cur, Prev, Rows, Cols)),
+    State0 = State#dui_runtime_state{
+        components = Components,
+        targets = Targets,
+        focus_order = Order
+    },
+    State1 = output_changed(State0, changed_cells(Cur, Prev, Rows, Cols)),
     State1#dui_runtime_state{
         current_buffer = Prev,
         previous_buffer = Cur,

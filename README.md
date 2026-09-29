@@ -20,8 +20,10 @@ concurrency — to write robust terminal applications using
 - True color (RGB), 256-color, 16-color and named-color styles
 - Grapheme-cluster-aware text, wide-character and display-width handling
 - Layout constraints/solver, themes, Unicode/ASCII character-set fallback
-- Widget library: label, block, button, progress, list, table, sparkline,
-  bar chart
+- Component tree with focus management (Tab/Shift+Tab, mouse click) and
+  event bubbling
+- Widget library: label, block, button, progress, list, text input, table,
+  sparkline, bar chart
 
 ## Requirements
 
@@ -63,7 +65,9 @@ Run it:
 educkui:run([{root, dui_counter}]).
 ```
 
-See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`).
+See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`), and
+`examples/form/` for a two-field form demonstrating focus, editing and mouse
+interaction (`./examples/form/run.sh`).
 
 ## Architecture
 

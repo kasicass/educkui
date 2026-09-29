@@ -13,6 +13,7 @@
     box/1, box/2,
     stack/2, stack/3,
     cells/1, cells/2,
+    component/2, component/3,
     styled/2,
     width/2, height/2,
     is_empty/1,
@@ -70,6 +71,16 @@ cells(Cells, Opts) when is_list(Cells) ->
         width = proplists:get_value(width, Opts),
         height = proplists:get_value(height, Opts)
     }.
+
+%% @doc Creates a child-component node. The runtime resolves it by looking up
+%% (or initializing) the component's state, calling its `view/1`, and rendering
+%% the result within this node's rect.
+-spec component(term(), module()) -> #dui_node{}.
+component(Id, Module) -> component(Id, Module, #{}).
+
+-spec component(term(), module(), map()) -> #dui_node{}.
+component(Id, Module, Props) when is_atom(Module), is_map(Props) ->
+    #dui_node{type = component, component_id = Id, module = Module, props = Props}.
 
 -spec styled(#dui_node{}, #dui_style{}) -> #dui_node{}.
 styled(#dui_node{} = Node, #dui_style{} = Style) ->

@@ -1,26 +1,100 @@
 %% @doc Rasterizes a render node tree into positioned cells.
 %%
-%% Produces a list of `{X, Y, #dui_cell{}}` tuples with 0-based coordinates
-%% relative to the given rect's origin. The runtime offsets these by 1 when
-%% writing into the 1-indexed screen buffer.
+%% Produces `{X, Y, #dui_cell{}}` tuples with 0-based coordinates relative to
+%% the given rect's origin. `render/3` also resolves child-component nodes:
+%% it initializes or looks up each component's state, calls its `view/1`, and
+%% returns the updated component tree, mouse-hit targets and focus order.
 -module(educkui_render).
 
 -include("educkui.hrl").
 
--export([render/2]).
+-export([render/2, render/3]).
 
+%% @doc Pure convenience wrapper: renders with an empty component table.
 -spec render(#dui_node{}, #dui_rect{}) -> [{integer(), integer(), #dui_cell{}}].
-render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H}) ->
+render(Node, Rect) ->
+    {Cells, _Components, _Targets, _Order} = render(Node, Rect, #{}),
+    Cells.
+
+%% @doc Renders `Node` within `Rect`, resolving child components.
+-spec render(#dui_node{}, #dui_rect{}, map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H},
+       Components) ->
     case Node#dui_node.type of
-        empty -> [];
-        text -> render_text(Node, X, Y, W);
-        box -> render_box(Node, X, Y, W, H);
-        stack -> render_stack(Node, X, Y, W, H);
-        cells -> render_cells(Node, X, Y)
+        empty -> {[], Components, [], []};
+        text -> {render_text(Node, X, Y, W), Components, [], []};
+        box -> render_box(Node, X, Y, W, H, Components);
+        stack -> render_stack(Node, X, Y, W, H, Components);
+        cells -> {render_cells(Node, X, Y), Components, [], []};
+        component -> render_component(Node, X, Y, W, H, Components)
     end.
 
 %% ---------------------------------------------------------------------------
-%% Internal
+%% Node renderers
+%% ---------------------------------------------------------------------------
+
+-spec render_component(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_component(#dui_node{component_id = Id, module = Mod, props = Props},
+                 X, Y, W, H, Components) ->
+    {Comp, Components1} = ensure_component(Id, Mod, Props, Components),
+    ChildView = (Comp#dui_component.module):view(Comp#dui_component.state),
+    Rect = #dui_rect{x = X, y = Y, width = W, height = H},
+    {Cells, Components2, SubTargets, SubOrder} = render(ChildView, Rect, Components1),
+    {Cells, Components2, [{Id, Rect} | SubTargets], [Id | SubOrder]}.
+
+-spec render_box(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_box(#dui_node{style = Style, children = Children}, X, Y, W, H, Components) ->
+    Background = fill_background(Style, X, Y, W, H),
+    {Cells, Components1, Targets, Order} =
+        render_children(Children, vertical_rects(X, Y, W, H, Children), Components),
+    {Background ++ Cells, Components1, Targets, Order}.
+
+-spec render_stack(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_stack(#dui_node{direction = vertical, children = Children},
+             X, Y, W, H, Components) ->
+    render_children(Children, vertical_rects(X, Y, W, H, Children), Components);
+render_stack(#dui_node{direction = horizontal, children = Children},
+             X, Y, W, H, Components) ->
+    render_children(Children, horizontal_rects(X, Y, W, H, Children), Components).
+
+-spec render_children([#dui_node{}], [#dui_rect{}], map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_children(Children, Rects, Components) ->
+    lists:foldl(
+        fun({Child, Rect}, {CellsAcc, CompAcc, TAcc, OAcc}) ->
+            {Cells, Comp1, Targets, Order} = render(Child, Rect, CompAcc),
+            {CellsAcc ++ Cells, Comp1, TAcc ++ Targets, OAcc ++ Order}
+        end,
+        {[], Components, [], []},
+        zip_short(Children, Rects)).
+
+%% ---------------------------------------------------------------------------
+%% Layout (simple: vertical = 1 row each, horizontal = equal split)
+%% ---------------------------------------------------------------------------
+
+-spec vertical_rects(integer(), integer(), non_neg_integer(), non_neg_integer(),
+    [#dui_node{}]) -> [#dui_rect{}].
+vertical_rects(X, Y, W, H, Children) ->
+    [#dui_rect{x = X, y = Y + J, width = W, height = 1}
+     || J <- lists:seq(0, max(0, H - 1)), J < length(Children)].
+
+-spec horizontal_rects(integer(), integer(), non_neg_integer(), non_neg_integer(),
+    [#dui_node{}]) -> [#dui_rect{}].
+horizontal_rects(X, Y, W, H, Children) ->
+    N = max(1, length(Children)),
+    ChildW = W div N,
+    [#dui_rect{x = X + I * ChildW, y = Y, width = ChildW, height = H}
+     || I <- lists:seq(0, N - 1)].
+
+%% ---------------------------------------------------------------------------
+%% Leaf renderers (cells only)
 %% ---------------------------------------------------------------------------
 
 -spec render_text(#dui_node{}, integer(), integer(), non_neg_integer()) ->
@@ -50,44 +124,10 @@ render_text(#dui_node{content = Content, style = Style}, X, Y, W) when W > 0 ->
 render_text(_Node, _X, _Y, _W) ->
     [].
 
--spec render_box(#dui_node{}, integer(), integer(), non_neg_integer(), non_neg_integer()) ->
-    [{integer(), integer(), #dui_cell{}}].
-render_box(#dui_node{style = Style, children = Children}, X, Y, W, H) ->
-    Background = fill_background(Style, X, Y, W, H),
-    ChildrenCells = render_vertical_children(Children, X, Y, W, H),
-    Background ++ ChildrenCells.
-
--spec render_stack(#dui_node{}, integer(), integer(), non_neg_integer(), non_neg_integer()) ->
-    [{integer(), integer(), #dui_cell{}}].
-render_stack(#dui_node{direction = vertical, children = Children}, X, Y, W, H) ->
-    render_vertical_children(Children, X, Y, W, H);
-render_stack(#dui_node{direction = horizontal, children = Children}, X, Y, W, H) ->
-    render_horizontal_children(Children, X, Y, W, H).
-
 -spec render_cells(#dui_node{}, integer(), integer()) ->
     [{integer(), integer(), #dui_cell{}}].
 render_cells(#dui_node{cells = Cells}, X, Y) ->
     [{X + Cx, Y + Cy, Cell} || {Cx, Cy, Cell} <- Cells].
-
--spec render_vertical_children([#dui_node{}], integer(), integer(),
-    non_neg_integer(), non_neg_integer()) -> [{integer(), integer(), #dui_cell{}}].
-render_vertical_children(Children, X, Y, W, H) ->
-    lists:flatmap(
-        fun({Child, J}) ->
-            render(Child, #dui_rect{x = X, y = Y + J, width = W, height = 1})
-        end,
-        zip_short(Children, lists:seq(0, H - 1))).
-
--spec render_horizontal_children([#dui_node{}], integer(), integer(),
-    non_neg_integer(), non_neg_integer()) -> [{integer(), integer(), #dui_cell{}}].
-render_horizontal_children(Children, X, Y, W, H) ->
-    N = max(1, length(Children)),
-    ChildW = W div N,
-    lists:flatmap(
-        fun({Child, I}) ->
-            render(Child, #dui_rect{x = X + I * ChildW, y = Y, width = ChildW, height = H})
-        end,
-        zip_short(Children, lists:seq(0, N - 1))).
 
 -spec fill_background(#dui_style{} | undefined, integer(), integer(),
     non_neg_integer(), non_neg_integer()) -> [{integer(), integer(), #dui_cell{}}].
@@ -99,15 +139,26 @@ fill_background(#dui_style{bg = Bg}, X, Y, W, H)
 fill_background(_Style, _X, _Y, _W, _H) ->
     [].
 
-%% Zips two lists, truncating to the shorter one.
--spec zip_short([term()], [term()]) -> [{term(), term()}].
-zip_short(A, B) ->
-    zip_short(A, B, []).
+%% ---------------------------------------------------------------------------
+%% Component table helpers
+%% ---------------------------------------------------------------------------
 
--spec zip_short([term()], [term()], [{term(), term()}]) -> [{term(), term()}].
-zip_short([], _B, Acc) -> lists:reverse(Acc);
-zip_short(_A, [], Acc) -> lists:reverse(Acc);
-zip_short([A | As], [B | Bs], Acc) -> zip_short(As, Bs, [{A, B} | Acc]).
+-spec ensure_component(term(), module(), map(), map()) ->
+    {#dui_component{}, map()}.
+ensure_component(Id, Mod, Props, Components) ->
+    case maps:find(Id, Components) of
+        {ok, Comp} ->
+            {Comp, Components};
+        error ->
+            InitResult = Mod:init(maps:to_list(Props)),
+            {State, _Commands} = educkui_elm:normalize_init_result(InitResult),
+            Comp = #dui_component{id = Id, module = Mod, state = State, props = Props},
+            {Comp, maps:put(Id, Comp, Components)}
+    end.
+
+%% ---------------------------------------------------------------------------
+%% Small helpers
+%% ---------------------------------------------------------------------------
 
 -spec grapheme_cell(char() | [char()], #dui_style{} | undefined) -> #dui_cell{}.
 grapheme_cell(G, Style) ->
@@ -127,3 +178,13 @@ apply_style(Cell, #dui_style{fg = Fg, bg = Bg, attrs = Attrs}) ->
         _ -> educkui_cell:put_bg(C1, Bg)
     end,
     lists:foldl(fun(A, C) -> educkui_cell:add_attr(C, A) end, C2, Attrs).
+
+%% Zips two lists, truncating to the shorter one.
+-spec zip_short([term()], [term()]) -> [{term(), term()}].
+zip_short(A, B) ->
+    zip_short(A, B, []).
+
+-spec zip_short([term()], [term()], [{term(), term()}]) -> [{term(), term()}].
+zip_short([], _B, Acc) -> lists:reverse(Acc);
+zip_short(_A, [], Acc) -> lists:reverse(Acc);
+zip_short([A | As], [B | Bs], Acc) -> zip_short(As, Bs, [{A, B} | Acc]).
