@@ -22,8 +22,11 @@ concurrency — to write robust terminal applications using
 - Layout constraints/solver, themes, Unicode/ASCII character-set fallback
 - Component tree with focus management (Tab/Shift+Tab, mouse click) and
   event bubbling
-- Widget library: label, block, button, progress, list, text input, table,
-  sparkline, bar chart
+- Widget library: label, block, button, progress, list, text input, text
+  area, pick list, scrollable list, table, tabs, split pane, tree view,
+  viewport, scroll bar, dialog, alert dialog, toast, context menu, gauge,
+  line chart, sparkline, bar chart, canvas, process monitor, supervision
+  tree viewer, log viewer
 
 ## Requirements
 
