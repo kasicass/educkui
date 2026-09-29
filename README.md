@@ -68,9 +68,11 @@ Run it:
 educkui:run([{root, dui_counter}]).
 ```
 
-See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`), and
+See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`),
 `examples/form/` for a two-field form demonstrating focus, editing and mouse
-interaction (`./examples/form/run.sh`).
+interaction (`./examples/form/run.sh`), and `examples/dashboard/` for a
+showcase composing tabs, split pane, tree view, charts, process monitor and a
+dialog overlay (`./examples/dashboard/run.sh`).
 
 ## Architecture
 

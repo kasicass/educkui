@@ -56,7 +56,7 @@ view(State) ->
                 true -> educkui_style:from([{reverse, true}]);
                 false -> undefined
             end,
-            educkui_render_node:text(Title, Style)
+            educkui_render_node:text(<<Title/binary, " ">>, Style)
         end,
         lists:zip(Tabs, lists:seq(0, max(0, length(Tabs) - 1)))),
     Header = educkui_render_node:stack(horizontal, Titles),

@@ -8,13 +8,16 @@
 -export([init/1, event_to_msg/2, update/2, view/1]).
 
 init(_Opts) ->
-    #{}.
+    #{msgs => []}.
 
 event_to_msg(#dui_event{type = key, key = esc}, _State) -> {msg, quit};
+event_to_msg(#dui_event{type = custom, key = shortcut, content = Msg}, _State) ->
+    {msg, Msg};
 event_to_msg(_Event, _State) -> ignore.
 
 update(quit, State) -> {State, [educkui_command:quit()]};
-update(_Msg, State) -> {State, []}.
+update(Msg, State) ->
+    {State#{msgs := maps:get(msgs, State) ++ [Msg]}, []}.
 
 view(_State) ->
     educkui_render_node:stack(vertical, [

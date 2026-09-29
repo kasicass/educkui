@@ -121,7 +121,13 @@ view(State) ->
         true -> Cells1 ++ [{Cursor, 0, educkui_cell:new(<<" ">>, [{attrs, [reverse]}])}];
         false -> Cells1
     end,
-    educkui_render_node:cells(Cells2).
+    %% Ensure at least one cell so the widget has a non-zero natural height
+    %% (and remains mouse-clickable) even when empty and unfocused.
+    FinalCells = case Cells2 of
+        [] -> [{0, 0, educkui_cell:new(<<" ">>)}];
+        _ -> Cells2
+    end,
+    educkui_render_node:cells(FinalCells).
 
 %% ---------------------------------------------------------------------------
 %% Internal

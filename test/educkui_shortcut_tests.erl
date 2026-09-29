@@ -35,3 +35,21 @@ runtime_shortcut_quit_test() ->
     after 1000 ->
         ?assert(false)
     end.
+
+shortcut_msg_test() ->
+    {ok, Pid} = educkui_runtime:start_link([
+        {root, dui_form},
+        {skip_terminal, true},
+        {shortcuts, [{{<<"d">>, [ctrl]}, {msg, toggle_dialog}}]}
+    ]),
+    educkui_runtime:send_event(Pid, educkui_event:key(<<"d">>, [{modifiers, [ctrl]}])),
+    ok = educkui_runtime:sync(Pid),
+    State = educkui_runtime:get_state(Pid),
+    ?assertEqual([toggle_dialog], maps:get(msgs, State#dui_runtime_state.root_state)),
+    ok = educkui_runtime:shutdown(Pid),
+    Ref = erlang:monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 1000 ->
+        ?assert(false)
+    end.

@@ -277,6 +277,8 @@ init_input(BackendMode) when BackendMode =:= raw; BackendMode =:= tty ->
 process_event(#dui_event{type = key} = Event, State) ->
     %% Global shortcuts take precedence over component routing.
     case educkui_shortcut:find(Event, State#dui_runtime_state.shortcuts) of
+        {ok, {msg, Msg}} ->
+            dispatch_root(educkui_event:custom(shortcut, Msg), State);
         {ok, Command} ->
             execute_commands(root, [Command], State);
         none ->
