@@ -36,6 +36,26 @@ runtime_shortcut_quit_test() ->
         ?assert(false)
     end.
 
+focus_command_test() ->
+    {ok, Pid} = educkui_runtime:start_link([
+        {root, dui_form},
+        {skip_terminal, true},
+        {shortcuts, [{{<<"f">>, [ctrl]}, {msg, focus_email}}]}
+    ]),
+    ok = educkui_runtime:force_render(Pid),
+    ok = educkui_runtime:sync(Pid),
+    educkui_runtime:send_event(Pid, educkui_event:key(<<"f">>, [{modifiers, [ctrl]}])),
+    ok = educkui_runtime:sync(Pid),
+    State = educkui_runtime:get_state(Pid),
+    ?assertEqual(email_input, hd(State#dui_runtime_state.focus)),
+    ok = educkui_runtime:shutdown(Pid),
+    Ref = erlang:monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 1000 ->
+        ?assert(false)
+    end.
+
 shortcut_msg_test() ->
     {ok, Pid} = educkui_runtime:start_link([
         {root, dui_form},

@@ -28,6 +28,7 @@ render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H},
         stack -> render_stack(Node, X, Y, W, H, Components);
         cells -> {render_cells(Node, X, Y), Components, [], []};
         overlay -> render_overlay(Node, X, Y, W, H, Components);
+        at -> render_at(Node, X, Y, W, H, Components);
         widget -> render_widget(Node, X, Y, W, H, Components);
         component -> render_component(Node, X, Y, W, H, Components)
     end.
@@ -49,6 +50,22 @@ render_overlay(#dui_node{children = Children}, X, Y, W, H, Components) ->
         end,
         {[], Components, [], []},
         Children).
+
+%% @doc Renders a single child at absolute coordinates within the rect.
+-spec render_at(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_at(#dui_node{x = Ax, y = Ay, children = [Child]}, X, Y, W, H, Components) ->
+    case Ax < W andalso Ay < H of
+        true ->
+            Rect = #dui_rect{x = X + Ax, y = Y + Ay,
+                             width = W - Ax, height = H - Ay},
+            render(Child, Rect, Components);
+        false ->
+            {[], Components, [], []}
+    end;
+render_at(#dui_node{}, _X, _Y, _W, _H, Components) ->
+    {[], Components, [], []}.
 
 %% @doc Renders a stateless widget by calling `Module:render(Props, Rect)`.
 -spec render_widget(#dui_node{}, integer(), integer(), non_neg_integer(),

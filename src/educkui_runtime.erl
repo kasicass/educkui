@@ -395,9 +395,46 @@ handle_tab(Shift, State) ->
 execute_commands(_ComponentId, [], State) ->
     State;
 execute_commands(ComponentId, Commands, State) ->
-    educkui_command_executor:execute(
-        State#dui_runtime_state.command_executor, ComponentId, Commands, self()),
-    State.
+    {RuntimeCmds, ExecCmds} =
+        lists:partition(fun is_runtime_cmd/1, Commands),
+    State1 = lists:foldl(
+        fun(Cmd, Acc) -> run_runtime_cmd(ComponentId, Cmd, Acc) end,
+        State,
+        RuntimeCmds),
+    case ExecCmds of
+        [] ->
+            State1;
+        _ ->
+            educkui_command_executor:execute(
+                State1#dui_runtime_state.command_executor,
+                ComponentId, ExecCmds, self()),
+            State1
+    end.
+
+-spec is_runtime_cmd(term()) -> boolean().
+is_runtime_cmd({focus, _}) -> true;
+is_runtime_cmd({parent, _}) -> true;
+is_runtime_cmd(_) -> false.
+
+-spec run_runtime_cmd(term(), term(), #dui_runtime_state{}) -> #dui_runtime_state{}.
+run_runtime_cmd(_ComponentId, {focus, Id}, State) ->
+    set_focus(Id, State);
+run_runtime_cmd(_ComponentId, {parent, Msg}, State) ->
+    dispatch_root(educkui_event:custom(parent, Msg), State).
+
+%% @doc Moves focus to `Id`, sending focus-lost/gained events as needed.
+-spec set_focus(term(), #dui_runtime_state{}) -> #dui_runtime_state{}.
+set_focus(Id, State) ->
+    OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
+    case OldFocus =:= Id of
+        true ->
+            State;
+        false ->
+            State1 = State#dui_runtime_state{
+                focus = educkui_focus:focus(State#dui_runtime_state.focus, Id)},
+            State2 = dispatch(OldFocus, educkui_event:focus(lost), State1),
+            dispatch(Id, educkui_event:focus(gained), State2)
+    end.
 
 -spec handle_resize(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
 handle_resize(#dui_event{width = W, height = H}, State) when W > 0, H > 0 ->

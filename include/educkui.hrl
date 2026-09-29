@@ -78,7 +78,9 @@
     cells :: [{integer(), integer(), term()}] | undefined,
     component_id :: term() | undefined,
     module :: module() | undefined,
-    props :: map() | undefined
+    props :: map() | undefined,
+    x :: integer() | undefined,
+    y :: integer() | undefined
 }).
 
 %% ---------------------------------------------------------------------------

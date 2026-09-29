@@ -16,6 +16,8 @@ event_to_msg(#dui_event{type = custom, key = shortcut, content = Msg}, _State) -
 event_to_msg(_Event, _State) -> ignore.
 
 update(quit, State) -> {State, [educkui_command:quit()]};
+update(focus_email, State) ->
+    {State, [educkui_command:focus(email_input)]};
 update(Msg, State) ->
     {State#{msgs := maps:get(msgs, State) ++ [Msg]}, []}.
 

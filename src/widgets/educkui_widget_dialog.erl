@@ -1,7 +1,11 @@
-%% @doc A stateless dialog widget.
+%% @doc A dialog widget with focusable buttons.
 %%
-%% Renders a centered bordered box with a title, content text and a row of
-%% buttons. Props: `{title, binary()}`, `{content, binary()}`,
+%% Renders a centered bordered box with a title and content text, plus a row
+%% of focusable push-button components at the bottom. Each button sends
+%% `{parent, {button, Id}}` to the root when activated (Enter/Space), with
+%% `Id = {dui_dialog_button, Label}`.
+%%
+%% Props: `{title, binary()}`, `{content, binary()}`,
 %% `{buttons, [binary()]}`, `{width, pos_integer()}`, `{height, pos_integer()}`,
 %% `{style, term()}`.
 -module(educkui_widget_dialog).
@@ -16,7 +20,7 @@
 render(Props, Rect) ->
     Title = maps:get(title, Props, <<>>),
     Content = maps:get(content, Props, <<>>),
-    Buttons = maps:get(buttons, Props, [<<"OK">>]),
+    Buttons = maps:get(buttons, Props, []),
     Style = style_from_prop(maps:get(style, Props, undefined)),
     BoxW = min(maps:get(width, Props, 40), max(3, Rect#dui_rect.width)),
     BoxH = min(maps:get(height, Props, 8), max(3, Rect#dui_rect.height)),
@@ -28,9 +32,16 @@ render(Props, Rect) ->
     TitleCells = text_cells(Title, BX + 2, BY + 1, BoxW - 4,
                             educkui_style:from([{bold, true}])),
     ContentCells = text_cells(Content, BX + 2, BY + 2, BoxW - 4, undefined),
-    ButtonCells = buttons_cells(Buttons, BX, BY + BoxH - 2, BoxW),
-    educkui_render_node:cells(Background ++ BorderCells ++ TitleCells ++
-                              ContentCells ++ ButtonCells).
+    BoxCells = Background ++ BorderCells ++ TitleCells ++ ContentCells,
+
+    case Buttons of
+        [] ->
+            educkui_render_node:cells(BoxCells);
+        _ ->
+            ButtonNodes = button_nodes(Buttons, BX, BY + BoxH - 2),
+            educkui_render_node:overlay(
+                [educkui_render_node:cells(BoxCells) | ButtonNodes])
+    end.
 
 -spec describe() -> map().
 describe() ->
@@ -44,6 +55,23 @@ default_props() ->
 %% ---------------------------------------------------------------------------
 %% Internal
 %% ---------------------------------------------------------------------------
+
+-spec button_nodes([binary()], integer(), integer()) -> [#dui_node{}].
+button_nodes(Buttons, BX, BY) ->
+    {Nodes, _Offset} = lists:mapfoldl(
+        fun(Label, Offset) ->
+            X = BX + 2 + Offset,
+            Id = {dui_dialog_button, Label},
+            Node = educkui_render_node:at(
+                X, BY,
+                educkui_render_node:component(
+                    Id, educkui_widget_push_button,
+                    #{label => Label, id => Id})),
+            {Node, Offset + string:length(Label) + 4}
+        end,
+        BX + 2,
+        Buttons),
+    Nodes.
 
 -spec fill_background(integer(), integer(), non_neg_integer(), non_neg_integer(),
     #dui_style{} | undefined) -> [{integer(), integer(), #dui_cell{}}].
@@ -80,17 +108,6 @@ text_cells(Text, X, Y, MaxW, Style) ->
     Graphemes = string:to_graphemes(Display),
     [{X + I, Y, cell(unicode:characters_to_binary([G]), Style)}
      || {I, G} <- zip_short(lists:seq(0, MaxW - 1), Graphemes)].
-
--spec buttons_cells([binary()], integer(), integer(), non_neg_integer()) ->
-    [{integer(), integer(), #dui_cell{}}].
-buttons_cells(Buttons, BX, Y, BoxW) ->
-    Text = join_binary(Buttons, <<"  ">>),
-    text_cells(Text, BX + 2, Y, max(0, BoxW - 4), undefined).
-
--spec join_binary([binary()], binary()) -> binary().
-join_binary([], _Sep) -> <<>>;
-join_binary([H], _Sep) -> H;
-join_binary([H | T], Sep) -> <<H/binary, Sep/binary, (join_binary(T, Sep))/binary>>.
 
 -spec cell(binary(), #dui_style{} | undefined) -> #dui_cell{}.
 cell(Char, Style) ->

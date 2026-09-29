@@ -14,6 +14,7 @@
     stack/2, stack/3,
     cells/1, cells/2,
     overlay/1, overlay/2,
+    at/3,
     widget/2, widget/3,
     component/2, component/3,
     styled/2,
@@ -84,6 +85,12 @@ widget(Module, Props) -> widget(Module, Props, []).
 -spec widget(module(), map(), [{atom(), term()}]) -> #dui_node{}.
 widget(Module, Props, _Opts) when is_atom(Module), is_map(Props) ->
     #dui_node{type = widget, module = Module, props = Props}.
+
+%% @doc Places a single child node at absolute coordinates within the parent
+%% rect (0-based). The child gets the remaining width/height.
+-spec at(integer(), integer(), #dui_node{}) -> #dui_node{}.
+at(X, Y, Child) ->
+    #dui_node{type = at, x = X, y = Y, children = [Child]}.
 
 %% @doc Creates an overlay node: children are rendered in order on top of each
 %% other within the same rect (later children win).

@@ -16,15 +16,31 @@
 init(_Opts) ->
     #{show_dialog => false}.
 
-event_to_msg(#dui_event{type = key, key = esc}, _State) -> {msg, quit};
+event_to_msg(#dui_event{type = key, key = esc}, State) ->
+    case maps:get(show_dialog, State) of
+        true -> {msg, close_dialog};
+        false -> {msg, quit}
+    end;
 event_to_msg(#dui_event{type = custom, key = shortcut, content = Msg}, _State) ->
+    {msg, Msg};
+event_to_msg(#dui_event{type = custom, key = parent, content = Msg}, _State) ->
     {msg, Msg};
 event_to_msg(_Event, _State) -> ignore.
 
 update(quit, State) ->
     {State, [educkui_command:quit()]};
+update(open_dialog, State) ->
+    {State#{show_dialog := true},
+     [{focus, {dui_dialog_button, <<"OK">>}}]};
+update(close_dialog, State) ->
+    {State#{show_dialog := false}, []};
 update(toggle_dialog, State) ->
-    {State#{show_dialog := not maps:get(show_dialog, State)}, []};
+    case maps:get(show_dialog, State) of
+        true -> update(close_dialog, State);
+        false -> update(open_dialog, State)
+    end;
+update({button, {dui_dialog_button, _Label}}, State) ->
+    {State#{show_dialog := false}, []};
 update(_Msg, State) ->
     {State, []}.
 
