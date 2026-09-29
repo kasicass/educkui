@@ -1,0 +1,125 @@
+# educkui
+
+A pure-Erlang terminal UI (TUI) framework for OTP 28+, inspired by
+[term_ui](https://github.com/pcharbon70/term_ui) / BubbleTea / Ratatui.
+
+`educkui` builds on the BEAM's strengths — supervision trees, behaviours, actor
+concurrency — to write robust terminal applications using
+[The Elm Architecture](https://guide.elm-lang.org/architecture/).
+
+- **No NIFs, no port drivers, no external dependencies** — raw mode uses
+  `shell:start_interactive({noshell, raw})` (OTP 26+).
+- **Pure Erlang**, rebar3 build, EUnit tests, Dialyzer + xref clean.
+
+## Features
+
+- The Elm Architecture (`init/1`, `event_to_msg/2`, `update/2`, `view/1`)
+- Double-buffered, differential rendering with an ETS-backed screen buffer
+- Raw and TTY backends with automatic selection and graceful degradation
+- Full keyboard/mouse/paste/resize input parsing
+- True color (RGB), 256-color, 16-color and named-color styles
+- Grapheme-cluster-aware text, wide-character and display-width handling
+- Layout constraints/solver, themes, Unicode/ASCII character-set fallback
+- Widget library: label, block, button, progress, list, table, sparkline,
+  bar chart
+
+## Requirements
+
+- Erlang/OTP 28+
+- rebar3
+
+## Quick start
+
+A counter application:
+
+```erlang
+-module(dui_counter).
+-behaviour(educkui_elm).
+-include_lib("educkui/include/educkui.hrl").
+-export([init/1, event_to_msg/2, update/2, view/1]).
+
+init(_Opts) -> #{count => 0}.
+
+event_to_msg(#dui_event{type = key, key = up}, _S) -> {msg, inc};
+event_to_msg(#dui_event{type = key, key = down}, _S) -> {msg, dec};
+event_to_msg(#dui_event{type = key, key = <<"q">>}, _S) -> {msg, quit};
+event_to_msg(_, _) -> ignore.
+
+update(inc, S) -> {S#{count := maps:get(count, S) + 1}, []};
+update(dec, S) -> {S#{count := maps:get(count, S) - 1}, []};
+update(quit, S) -> {S, [educkui_command:quit()]}.
+
+view(S) ->
+    Count = maps:get(count, S),
+    educkui_render_node:stack(vertical, [
+        educkui_render_node:text(<<"Counter: ", (integer_to_binary(Count))/binary>>),
+        educkui_render_node:text(<<"up/down to change, q to quit">>)
+    ]).
+```
+
+Run it:
+
+```erlang
+educkui:run([{root, dui_counter}]).
+```
+
+See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`).
+
+## Architecture
+
+```
+input → escape parser → event → event router → event_to_msg → update
+  → (state, commands) → command executor
+                        ↓
+render tick → view → render node → renderer → buffer (current)
+  → diff/changed cells → backend → terminal
+```
+
+| Layer | Modules |
+|---|---|
+| Terminal foundation | `educkui_ansi`, `educkui_sgr`, `educkui_style`, `educkui_cell`, `educkui_display_width` |
+| Rendering | `educkui_buffer`, `educkui_diff`, `educkui_sequence_buffer`, `educkui_cursor_optimizer`, `educkui_framerate_limiter`, `educkui_render` |
+| Backends | `educkui_backend`, `educkui_backend_raw`, `educkui_backend_tty`, `educkui_backend_selector` |
+| Terminal | `educkui_terminal`, `educkui_terminal_size`, `educkui_capabilities`, `educkui_term_utils` |
+| Input/events | `educkui_escape_parser`, `educkui_input_raw`, `educkui_input_tty`, `educkui_event`, `educkui_event_router`, `educkui_focus`, `educkui_mouse` |
+| Components | `educkui_component`, `educkui_render_node`, `educkui_component_helpers`, `educkui_elm`, `educkui_command`, `educkui_command_executor` |
+| Runtime | `educkui_runtime`, `educkui_config` |
+| Layout/style | `educkui_layout_constraint`, `educkui_layout_solver`, `educkui_layout_cache`, `educkui_theme`, `educkui_character_set` |
+| Widgets | `educkui_widget_*` under `src/widgets/` |
+
+## Events
+
+`educkui_escape_parser` parses terminal bytes into `#dui_event{}` records:
+
+- Key events: arrows, function keys, Home/End/PgUp/PgDn, Insert/Delete,
+  Ctrl/Alt/Shift modifiers, printable characters, UTF-8
+- Mouse events: SGR mouse tracking (press/release/drag/scroll)
+- Paste events (bracketed paste), resize events, custom events, tick events
+
+## Rendering
+
+- Components return `#dui_node{}` render trees (`text/box/stack/cells/empty`).
+- `educkui_render` rasterizes the tree into positioned cells.
+- Cells are written to the current ETS-backed buffer; only changed cells are
+  sent to the backend (double buffering).
+- The raw backend emits style deltas and optimized cursor movement.
+
+## Testing
+
+```bash
+rebar3 compile
+rebar3 eunit
+rebar3 ct
+rebar3 xref
+rebar3 dialyzer
+```
+
+Or run the full pipeline:
+
+```bash
+./scripts/ci.sh
+```
+
+## License
+
+Apache-2.0
