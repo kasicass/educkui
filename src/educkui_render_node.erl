@@ -14,6 +14,7 @@
     stack/2, stack/3,
     cells/1, cells/2,
     overlay/1, overlay/2,
+    widget/2, widget/3,
     component/2, component/3,
     styled/2,
     width/2, height/2,
@@ -74,6 +75,15 @@ cells(Cells, Opts) when is_list(Cells) ->
         width = proplists:get_value(width, Opts),
         height = proplists:get_value(height, Opts)
     }.
+
+%% @doc Creates a stateless-widget node. The renderer calls
+%% `Module:render(Props, Rect)` and renders the result within this node's rect.
+-spec widget(module(), map()) -> #dui_node{}.
+widget(Module, Props) -> widget(Module, Props, []).
+
+-spec widget(module(), map(), [{atom(), term()}]) -> #dui_node{}.
+widget(Module, Props, _Opts) when is_atom(Module), is_map(Props) ->
+    #dui_node{type = widget, module = Module, props = Props}.
 
 %% @doc Creates an overlay node: children are rendered in order on top of each
 %% other within the same rect (later children win).

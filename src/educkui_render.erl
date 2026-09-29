@@ -28,6 +28,7 @@ render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H},
         stack -> render_stack(Node, X, Y, W, H, Components);
         cells -> {render_cells(Node, X, Y), Components, [], []};
         overlay -> render_overlay(Node, X, Y, W, H, Components);
+        widget -> render_widget(Node, X, Y, W, H, Components);
         component -> render_component(Node, X, Y, W, H, Components)
     end.
 
@@ -48,6 +49,15 @@ render_overlay(#dui_node{children = Children}, X, Y, W, H, Components) ->
         end,
         {[], Components, [], []},
         Children).
+
+%% @doc Renders a stateless widget by calling `Module:render(Props, Rect)`.
+-spec render_widget(#dui_node{}, integer(), integer(), non_neg_integer(),
+    non_neg_integer(), map()) ->
+    {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
+render_widget(#dui_node{module = Mod, props = Props}, X, Y, W, H, Components) ->
+    Rect = #dui_rect{x = X, y = Y, width = W, height = H},
+    Child = Mod:render(Props, Rect),
+    render(Child, Rect, Components).
 
 -spec render_component(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->

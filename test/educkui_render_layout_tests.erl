@@ -35,6 +35,13 @@ horizontal_flex_test() ->
     ?assertEqual(<<"L">>, char_at(Cells, 0, 0)),
     ?assertEqual(<<"R">>, char_at(Cells, 1, 0)).
 
+widget_node_test() ->
+    View = educkui_render_node:widget(educkui_widget_gauge, #{value => 1.0}),
+    Cells = educkui_render:render(View, #dui_rect{width = 2, height = 1}),
+    %% two bar cells; the first is the filled gauge cell.
+    {_X, _Y, Cell} = hd(Cells),
+    ?assertEqual(<<"█"/utf8>>, Cell#dui_cell.char).
+
 explicit_height_test() ->
     View = educkui_render_node:stack(vertical, [
         educkui_render_node:text(<<"a">>),

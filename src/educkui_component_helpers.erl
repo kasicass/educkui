@@ -12,6 +12,7 @@
     stack/2, stack/3,
     styled/2,
     overlay/1, overlay/2,
+    widget/2, widget/3,
     component/2, component/3,
     empty/0,
     props/2,
@@ -53,6 +54,12 @@ overlay(Children) -> educkui_render_node:overlay(Children).
 
 -spec overlay([#dui_node{}], [{atom(), term()}]) -> #dui_node{}.
 overlay(Children, Opts) -> educkui_render_node:overlay(Children, Opts).
+
+-spec widget(module(), map()) -> #dui_node{}.
+widget(Module, Props) -> educkui_render_node:widget(Module, Props).
+
+-spec widget(module(), map(), [{atom(), term()}]) -> #dui_node{}.
+widget(Module, Props, Opts) -> educkui_render_node:widget(Module, Props, Opts).
 
 -spec component(term(), module()) -> #dui_node{}.
 component(Id, Module) -> educkui_render_node:component(Id, Module).
