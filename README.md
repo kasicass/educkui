@@ -68,11 +68,22 @@ Run it:
 educkui:run([{root, dui_counter}]).
 ```
 
-See `examples/counter/` for a runnable copy (`./examples/counter/run.sh`),
-`examples/form/` for a two-field form demonstrating focus, editing and mouse
-interaction (`./examples/form/run.sh`), and `examples/dashboard/` for a
-showcase composing tabs, split pane, tree view, charts, process monitor and a
-dialog overlay (`./examples/dashboard/run.sh`).
+See `examples/` for runnable demos:
+
+| Example | Widgets |
+|---|---|
+| `counter` | minimal Elm counter |
+| `form` | text input, focus, editing, mouse |
+| `dashboard` | tabs, split pane, tree, charts, process monitor, dialog |
+| `charts` | gauge, sparkline, line chart, bar chart |
+| `table` | table |
+| `tree` | tree view |
+| `editor` | multi-line text area |
+| `picklist` | pick list with type-ahead filtering |
+| `ide` | split pane + tree + editor |
+| `dialog` | dialog, toast, context menu |
+
+Run any of them with `./examples/<name>/run.sh`.
 
 ## Architecture
 
