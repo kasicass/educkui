@@ -6,15 +6,19 @@
 
 -export([quit/0, noop/0, send_msg/2, exec/1, focus/1, parent/1]).
 
+%% @doc Returns a command that stops the runtime.
 -spec quit() -> {quit}.
 quit() -> {quit}.
 
+%% @doc Returns a no-op command.
 -spec noop() -> {noop}.
 noop() -> {noop}.
 
+%% @doc Returns a command that sends `Msg' to `Pid'.
 -spec send_msg(pid(), term()) -> {send, pid(), term()}.
 send_msg(Pid, Msg) -> {send, Pid, Msg}.
 
+%% @doc Returns a command that runs `Fun/0' asynchronously.
 -spec exec(fun(() -> term())) -> {exec, fun(() -> term())}.
 exec(Fun) when is_function(Fun, 0) -> {exec, Fun}.
 

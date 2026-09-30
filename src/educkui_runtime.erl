@@ -33,6 +33,7 @@
 %% Client API
 %% ---------------------------------------------------------------------------
 
+%% @doc Starts the runtime process linked to the caller.
 -spec start_link([{atom(), term()}]) -> gen_server:start_ret().
 start_link(Opts) ->
     gen_server:start_link(?MODULE, Opts, []).
@@ -50,34 +51,42 @@ run(Opts) ->
             {error, Reason}
     end.
 
+%% @doc Injects an event into the runtime.
 -spec send_event(pid(), #dui_event{}) -> ok.
 send_event(Runtime, Event) ->
     gen_server:cast(Runtime, {event, Event}).
 
+%% @doc Sends a directed message to a component.
 -spec send_message(pid(), term(), term()) -> ok.
 send_message(Runtime, ComponentId, Message) ->
     gen_server:cast(Runtime, {message, ComponentId, Message}).
 
+%% @doc Asks the runtime to shut down.
 -spec shutdown(pid()) -> ok.
 shutdown(Runtime) ->
     gen_server:cast(Runtime, shutdown).
 
+%% @doc Synchronously waits for the runtime to process prior requests.
 -spec sync(pid()) -> ok.
 sync(Runtime) ->
     gen_server:call(Runtime, sync).
 
+%% @doc Returns the runtime state record (for introspection/testing).
 -spec get_state(pid()) -> #dui_runtime_state{}.
 get_state(Runtime) ->
     gen_server:call(Runtime, get_state).
 
+%% @doc Forces an immediate render.
 -spec force_render(pid()) -> ok.
 force_render(Runtime) ->
     gen_server:cast(Runtime, force_render).
 
+%% @doc Returns the active backend mode from the persistent term cache.
 -spec backend_mode() -> raw | tty | skip | undefined.
 backend_mode() ->
     persistent_term:get({educkui, backend_mode}, undefined).
 
+%% @doc Returns detected terminal capabilities from the persistent term cache.
 -spec capabilities() -> map() | undefined.
 capabilities() ->
     persistent_term:get({educkui, capabilities}, undefined).
