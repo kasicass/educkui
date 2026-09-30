@@ -38,3 +38,13 @@ message_to_component_test() ->
     Event = educkui_event:custom(message, {stream, {stream_item, <<"x">>}}),
     ?assertEqual({route, stream, Event},
                  educkui_event_router:route(Event, educkui_focus:new(), [])).
+
+command_result_to_component_test() ->
+    Event = educkui_event:custom(command_result, {widget1, 42}),
+    ?assertEqual({route, widget1, Event},
+                 educkui_event_router:route(Event, educkui_focus:new(), [])).
+
+command_result_to_root_test() ->
+    Event = educkui_event:custom(command_result, {root, {ok, done}}),
+    ?assertEqual({route, root, Event},
+                 educkui_event_router:route(Event, educkui_focus:new(), [])).

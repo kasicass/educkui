@@ -10,3 +10,15 @@ constructors_test() ->
 exec_test() ->
     Fun = fun() -> 42 end,
     ?assertEqual({exec, Fun}, educkui_command:exec(Fun)).
+
+interval_test() ->
+    ?assertMatch({interval, undefined, tick, 1000},
+                 educkui_command:interval(tick, 1000)).
+
+interval_with_ref_test() ->
+    Ref = make_ref(),
+    ?assertEqual({interval, Ref, tick, 250}, educkui_command:interval(Ref, tick, 250)).
+
+cancel_interval_test() ->
+    Ref = make_ref(),
+    ?assertEqual({cancel_interval, Ref}, educkui_command:cancel_interval(Ref)).

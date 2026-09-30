@@ -47,6 +47,62 @@ resize_event_test() ->
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
+command_result_returns_to_root_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
+    educkui_runtime:send_event(Pid, educkui_event:key(run)),
+    ok = wait_until(Pid, fun(S) -> maps:get(result, S) =:= 42 end),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
+interval_delivers_and_cancels_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
+    educkui_runtime:send_event(Pid, educkui_event:key(start_timer)),
+    ok = wait_until(Pid, fun(S) -> maps:get(ticks, S) >= 1 end),
+    educkui_runtime:send_event(Pid, educkui_event:key(cancel_timer)),
+    timer:sleep(60),
+    ok = educkui_runtime:sync(Pid),
+    S1 = educkui_runtime:get_state(Pid),
+    Ticks1 = maps:get(ticks, S1#dui_runtime_state.root_state),
+    timer:sleep(80),
+    ok = educkui_runtime:sync(Pid),
+    S2 = educkui_runtime:get_state(Pid),
+    Ticks2 = maps:get(ticks, S2#dui_runtime_state.root_state),
+    ?assertEqual(Ticks1, Ticks2),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
+root_receives_initial_size_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
+    ok = educkui_runtime:sync(Pid),
+    S = educkui_runtime:get_state(Pid),
+    ?assertEqual({80, 24}, maps:get(size, S#dui_runtime_state.root_state)),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
+root_receives_resize_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
+    ok = educkui_runtime:sync(Pid),
+    educkui_runtime:send_event(Pid, educkui_event:resize(100, 30)),
+    ok = educkui_runtime:sync(Pid),
+    S = educkui_runtime:get_state(Pid),
+    ?assertEqual({100, 30}, maps:get(size, S#dui_runtime_state.root_state)),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
+wait_until(Pid, Pred) ->
+    wait_until(Pid, Pred, 50).
+
+wait_until(Pid, Pred, 0) ->
+    State = educkui_runtime:get_state(Pid),
+    ?assert(Pred(State#dui_runtime_state.root_state));
+wait_until(Pid, Pred, N) ->
+    ok = educkui_runtime:sync(Pid),
+    State = educkui_runtime:get_state(Pid),
+    case Pred(State#dui_runtime_state.root_state) of
+        true -> ok;
+        false -> timer:sleep(10), wait_until(Pid, Pred, N - 1)
+    end.
+
 wait_for_exit(Pid) ->
     Ref = erlang:monitor(process, Pid),
     receive

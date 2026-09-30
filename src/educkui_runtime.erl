@@ -134,6 +134,7 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
     } = Ctx,
 
     {CurrentBuf, PreviousBuf} = create_buffers(Dimensions),
+    {Rows, Cols} = Dimensions,
 
     {ok, Executor} = educkui_command_executor:start_link(),
 
@@ -181,7 +182,10 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
     erlang:send_after(RenderInterval, self(), render_tick),
 
     State1 = execute_commands(root, InitCommands, State),
-    {ok, State1}.
+    %% Deliver the initial terminal size to the root component so it can lay
+    %% out without waiting for the first resize event.
+    State2 = dispatch_root(educkui_event:resize(Cols, Rows), State1),
+    {ok, State2}.
 
 handle_call(sync, _From, State) ->
     {reply, ok, State};
@@ -227,6 +231,8 @@ handle_info({educkui_command, quit}, State) ->
 handle_info({command_result, ComponentId, Result}, State) ->
     Event = educkui_event:custom(command_result, {ComponentId, Result}),
     {noreply, process_event(Event, State)};
+handle_info({educkui_interval, Ref, Msg, Ms}, State) ->
+    handle_interval(Ref, Msg, Ms, State);
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -423,13 +429,46 @@ execute_commands(ComponentId, Commands, State) ->
 -spec is_runtime_cmd(term()) -> boolean().
 is_runtime_cmd({focus, _}) -> true;
 is_runtime_cmd({parent, _}) -> true;
+is_runtime_cmd({interval, _, _, _}) -> true;
+is_runtime_cmd({cancel_interval, _}) -> true;
 is_runtime_cmd(_) -> false.
 
 -spec run_runtime_cmd(term(), term(), #dui_runtime_state{}) -> #dui_runtime_state{}.
 run_runtime_cmd(_ComponentId, {focus, Id}, State) ->
     set_focus(Id, State);
 run_runtime_cmd(_ComponentId, {parent, Msg}, State) ->
-    dispatch_root(educkui_event:custom(parent, Msg), State).
+    dispatch_root(educkui_event:custom(parent, Msg), State);
+run_runtime_cmd(_ComponentId, {interval, Ref0, Msg, Ms}, State) ->
+    Ref = case Ref0 of
+        undefined -> make_ref();
+        _ -> Ref0
+    end,
+    Timer = erlang:send_after(Ms, self(), {educkui_interval, Ref, Msg, Ms}),
+    Timers = maps:put(Ref, Timer, State#dui_runtime_state.timers),
+    State#dui_runtime_state{timers = Timers};
+run_runtime_cmd(_ComponentId, {cancel_interval, Ref}, State) ->
+    case maps:take(Ref, State#dui_runtime_state.timers) of
+        {Timer, Rest} ->
+            _ = erlang:cancel_timer(Timer),
+            State#dui_runtime_state{timers = Rest};
+        error ->
+            State
+    end.
+
+%% @doc Handles a fired interval timer, dispatching the message as a `parent'
+%% event to the root component and re-arming the timer.
+-spec handle_interval(reference(), term(), pos_integer(), #dui_runtime_state{}) ->
+    {noreply, #dui_runtime_state{}}.
+handle_interval(Ref, Msg, Ms, State) ->
+    case maps:is_key(Ref, State#dui_runtime_state.timers) of
+        true ->
+            State1 = dispatch_root(educkui_event:custom(parent, Msg), State),
+            Timer = erlang:send_after(Ms, self(), {educkui_interval, Ref, Msg, Ms}),
+            Timers = maps:put(Ref, Timer, State1#dui_runtime_state.timers),
+            {noreply, State1#dui_runtime_state{timers = Timers}};
+        false ->
+            {noreply, State}
+    end.
 
 %% @doc Moves focus to `Id', sending focus-lost/gained events as needed.
 -spec set_focus(term(), #dui_runtime_state{}) -> #dui_runtime_state{}.
@@ -465,12 +504,14 @@ handle_sigwinch(State) ->
 apply_resize(State, Rows, Cols) ->
     {ok, NewCur} = educkui_buffer:resize(State#dui_runtime_state.current_buffer, Rows, Cols),
     {ok, NewPrev} = educkui_buffer:resize(State#dui_runtime_state.previous_buffer, Rows, Cols),
-    State#dui_runtime_state{
+    State1 = State#dui_runtime_state{
         dimensions = {Rows, Cols},
         current_buffer = NewCur,
         previous_buffer = NewPrev,
         dirty = true
-    }.
+    },
+    %% Notify the root component of the new size.
+    dispatch_root(educkui_event:resize(Cols, Rows), State1).
 
 -spec feed_input(#dui_runtime_state{}, binary()) -> #dui_runtime_state{}.
 feed_input(#dui_runtime_state{input_handler = Handler, input_state = InputState} = State,
@@ -589,6 +630,7 @@ create_buffers({Rows, Cols}) ->
 
 -spec cleanup(#dui_runtime_state{}) -> ok.
 cleanup(State) ->
+    catch cancel_timers(State),
     catch educkui_signal_handler:uninstall(self()),
     catch stop_reader(State#dui_runtime_state.input_reader),
     catch shutdown_backend(State#dui_runtime_state.backend, State#dui_runtime_state.backend_state),
@@ -598,6 +640,12 @@ cleanup(State) ->
                           State#dui_runtime_state.previous_buffer),
     persistent_term:erase({educkui, backend_mode}),
     persistent_term:erase({educkui, capabilities}),
+    ok.
+
+%% @doc Cancels all pending interval timers.
+-spec cancel_timers(#dui_runtime_state{}) -> ok.
+cancel_timers(#dui_runtime_state{timers = Timers}) ->
+    maps:foreach(fun(_Ref, Timer) -> _ = erlang:cancel_timer(Timer) end, Timers),
     ok.
 
 -spec stop_reader(pid() | undefined) -> ok.

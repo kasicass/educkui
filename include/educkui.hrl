@@ -151,7 +151,8 @@
     components = #{} :: map(),        %% Id => #dui_component{}
     focus_order = [] :: [term()],
     escape_timer :: reference() | undefined,
-    shortcuts = [] :: [{term(), term()}]
+    shortcuts = [] :: [{term(), term()}],
+    timers = #{} :: #{reference() => reference()}   %% Ref => timer reference
 }).
 
 -endif.

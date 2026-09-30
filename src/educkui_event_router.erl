@@ -31,5 +31,10 @@ route(#dui_event{type = paste} = Event, Focus, _Targets) ->
 route(#dui_event{type = custom, key = message, content = {Id, _Msg}} = Event,
       _Focus, _Targets) ->
     {route, Id, Event};
+%% Results of `{exec, Fun}' commands are routed back to the component that
+%% returned the command, so `update/2' can react to async results.
+route(#dui_event{type = custom, key = command_result, content = {Id, _Result}} = Event,
+      _Focus, _Targets) ->
+    {route, Id, Event};
 route(_Event, _Focus, _Targets) ->
     ignore.
