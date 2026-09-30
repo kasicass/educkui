@@ -8,10 +8,12 @@
 -include_lib("common_test/include/ct.hrl").
 
 -export([all/0, init_per_suite/1, end_per_suite/1]).
--export([counter_smoke/1, dashboard_tab_edit/1, dashboard_dialog/1]).
+-export([counter_smoke/1, dashboard_tab_edit/1, dashboard_dialog/1,
+         form_builder_submit/1, stream_flow/1, resize_sigwinch/1]).
 
 all() ->
-    [counter_smoke, dashboard_tab_edit, dashboard_dialog].
+    [counter_smoke, dashboard_tab_edit, dashboard_dialog,
+     form_builder_submit, stream_flow, resize_sigwinch].
 
 -spec init_per_suite(term()) -> term().
 init_per_suite(Config) ->
@@ -27,12 +29,18 @@ init_per_suite(Config) ->
     _ = os:cmd("erlc -I " ++ Include ++ " -pa " ++ Ebin ++
                " -o /tmp/dui_ct_examples " ++
                Examples ++ "/counter/dui_counter.erl " ++
-               Examples ++ "/dashboard/dui_dashboard.erl"),
+               Examples ++ "/dashboard/dui_dashboard.erl " ++
+               Examples ++ "/form_builder/dui_form_builder.erl " ++
+               Examples ++ "/stream/dui_stream.erl"),
     ok = write_script("/tmp/dui_ct_counter.sh",
         erl_script(Ebin, [{root, dui_counter}])),
     ok = write_script("/tmp/dui_ct_dashboard.sh",
         erl_script(Ebin, [{root, dui_dashboard},
                           {shortcuts, [{{<<"d">>, [ctrl]}, {msg, toggle_dialog}}]}])),
+    ok = write_script("/tmp/dui_ct_form_builder.sh",
+        erl_script(Ebin, [{root, dui_form_builder}])),
+    ok = write_script("/tmp/dui_ct_stream.sh",
+        erl_script(Ebin, [{root, dui_stream}])),
     Config.
 
 -spec end_per_suite(term()) -> ok.
@@ -80,6 +88,58 @@ dashboard_dialog(_Config) ->
         Screen2 = capture("ct_dlg"),
         ok = assert_not_contains(Screen2, "About"),
         keys("ct_dlg", "Escape"),
+        timer:sleep(1500)
+    end).
+
+form_builder_submit(_Config) ->
+    with_tmux("ct_form", "/tmp/dui_ct_form_builder.sh", fun() ->
+        timer:sleep(2000),
+        keys("ct_form", "Tab"),
+        timer:sleep(300),
+        keys("ct_form", "alice"),
+        keys("ct_form", "Down"),
+        keys("ct_form", "secret1"),
+        timer:sleep(500),
+        Screen1 = capture("ct_form"),
+        ok = assert_contains(Screen1, "alice"),
+        %% username -> password -> email -> newsletter -> country -> interests
+        %% -> submit: five Down presses from password.
+        keys("ct_form", "Down Down Down Down Down Enter"),
+        timer:sleep(1000),
+        Screen2 = capture("ct_form"),
+        ok = assert_contains(Screen2, "Submitted:"),
+        keys("ct_form", "Escape"),
+        timer:sleep(1500)
+    end).
+
+stream_flow(_Config) ->
+    with_tmux("ct_stream", "/tmp/dui_ct_stream.sh", fun() ->
+        timer:sleep(2500),
+        keys("ct_stream", "Tab"),
+        timer:sleep(500),
+        Screen1 = capture("ct_stream"),
+        ok = assert_contains(Screen1, "event-"),
+        ok = assert_contains(Screen1, "stream running"),
+        keys("ct_stream", "Space"),
+        timer:sleep(500),
+        Screen2 = capture("ct_stream"),
+        ok = assert_contains(Screen2, "PAUSED"),
+        keys("ct_stream", "Space"),
+        keys("ct_stream", "Escape"),
+        timer:sleep(1500)
+    end).
+
+resize_sigwinch(_Config) ->
+    with_tmux("ct_resize", "/tmp/dui_ct_counter.sh", fun() ->
+        timer:sleep(2000),
+        _ = os:cmd("tmux resize-window -t ct_resize -x 120 -y 40"),
+        timer:sleep(1000),
+        Screen = capture("ct_resize"),
+        ok = assert_contains(Screen, "Counter: 0"),
+        Dims = os:cmd(
+            "tmux display-message -t ct_resize -p '#{pane_width} #{pane_height}'"),
+        ok = assert_contains(Dims, "120 40"),
+        keys("ct_resize", "q"),
         timer:sleep(1500)
     end).
 
