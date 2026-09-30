@@ -35,6 +35,15 @@ skip_terminal_backend_mode_test() ->
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
+skip_backend_size_option_test() ->
+    {ok, Pid} = educkui_runtime:start_link(
+        [{root, dui_counter}, {skip_terminal, true}, {size, {30, 100}}]),
+    ok = educkui_runtime:sync(Pid),
+    S = educkui_runtime:get_state(Pid),
+    ?assertEqual({30, 100}, S#dui_runtime_state.dimensions),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
 resize_event_test() ->
     {ok, Pid} = educkui_runtime:start_link([{root, dui_counter}, {skip_terminal, true}]),
     ok = educkui_runtime:sync(Pid),

@@ -302,8 +302,12 @@ terminate(_Reason, State) ->
 -spec init_backend(atom(), boolean(), [{atom(), term()}]) ->
     {ok, raw | tty | skip, module() | undefined, term(), {pos_integer(), pos_integer()},
      boolean()} | {error, term()}.
-init_backend(_BackendOpt, true, _Merged) ->
-    {ok, skip, undefined, undefined, {24, 80}, false};
+init_backend(_BackendOpt, true, Merged) ->
+    Dimensions = case backend_size(Merged) of
+        undefined -> {24, 80};
+        Size -> Size
+    end,
+    {ok, skip, undefined, undefined, Dimensions, false};
 init_backend(BackendOpt, false, Merged) ->
     {ok, _TermPid} = educkui_terminal:start_link(),
     case educkui_backend_selector:select(BackendOpt) of
