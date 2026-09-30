@@ -14,7 +14,7 @@
 
 -include("educkui.hrl").
 
--export([render/2, describe/0, default_props/0]).
+-export([render/2, describe/0, default_props/0, natural_size/1]).
 
 -spec render(map(), #dui_rect{}) -> #dui_node{}.
 render(Props, Rect) ->
@@ -51,6 +51,12 @@ describe() ->
 default_props() ->
     #{title => <<>>, content => <<>>, buttons => [<<"OK">>],
       width => 40, height => 8, style => undefined}.
+
+%% @doc The requested box size. Declaring it keeps `nat_size' from measuring
+%% the centered box against a dummy rect (which would be huge).
+-spec natural_size(map()) -> {pos_integer(), pos_integer()}.
+natural_size(Props) ->
+    {maps:get(width, Props, 40), maps:get(height, Props, 8)}.
 
 %% ---------------------------------------------------------------------------
 %% Internal

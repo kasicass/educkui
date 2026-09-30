@@ -98,5 +98,18 @@ Stateless widgets implement `educkui_component`:
 -export([render/2, describe/0, default_props/0]).
 ```
 
+Widgets that size themselves from props rather than from the rect should also
+export the optional `natural_size/1` callback, which returns `{Width, Height}`:
+
+```erlang
+-export([render/2, describe/0, default_props/0, natural_size/1]).
+
+natural_size(Props) -> {maps:get(width, Props, 40), maps:get(height, Props, 8)}.
+```
+
+Without it the layout measures the widget by rendering it against a large
+dummy rect; a widget that centers content within that rect (e.g. a dialog)
+would then report an enormous natural size and be pushed off-screen.
+
 Then compose them in a root `view/1` with `educkui_render_node:widget/3` or
 `educkui_render_node:component/3`.

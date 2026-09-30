@@ -195,13 +195,21 @@ nat_size(#dui_node{type = component, component_id = Id, module = Mod, props = Pr
      Components2};
 nat_size(#dui_node{type = widget, module = Mod, props = Props,
                    width = W, height = H}, Components) ->
-    %% A dummy large rect: widget natural size is prop-driven; rect-dependent
-    %% positioning (e.g. dialog centering) is resolved again at render time.
-    Dummy = #dui_rect{x = 0, y = 0, width = 1000, height = 1000},
-    Sub = Mod:render(Props, Dummy),
-    {Size, Components1} = nat_size(Sub, Components),
-    {{apply_size(W, element(1, Size)), apply_size(H, element(2, Size))},
-     Components1};
+    %% Widgets that declare a prop-driven size (e.g. a centered dialog) must
+    %% not be measured against a dummy rect, otherwise rect-relative placement
+    %% yields an enormous natural size.
+    case widget_declared_size(Mod, Props) of
+        {ok, NatW, NatH} ->
+            {{apply_size(W, NatW), apply_size(H, NatH)}, Components};
+        false ->
+            %% A dummy large rect: widget natural size is prop-driven;
+            %% rect-dependent positioning is resolved again at render time.
+            Dummy = #dui_rect{x = 0, y = 0, width = 1000, height = 1000},
+            Sub = Mod:render(Props, Dummy),
+            {Size, Components1} = nat_size(Sub, Components),
+            {{apply_size(W, element(1, Size)), apply_size(H, element(2, Size))},
+             Components1}
+    end;
 nat_size(#dui_node{type = overlay, children = Children, width = W, height = H},
          Components) ->
     {Sizes, Components1} =
@@ -226,6 +234,21 @@ nat_size(#dui_node{type = Type, children = Children, direction = Direction,
 nat_size(#dui_node{width = W, height = H}, Components) ->
     %% unknown node: assume a single cell.
     {{apply_size(W, 1), apply_size(H, 1)}, Components}.
+
+-spec widget_declared_size(module(), map()) ->
+    {ok, non_neg_integer(), non_neg_integer()} | false.
+widget_declared_size(Mod, Props) ->
+    _ = code:ensure_loaded(Mod),
+    case erlang:function_exported(Mod, natural_size, 1) of
+        true ->
+            case Mod:natural_size(Props) of
+                {Nw, Nh} when is_integer(Nw), Nw >= 0,
+                              is_integer(Nh), Nh >= 0 -> {ok, Nw, Nh};
+                _ -> false
+            end;
+        false ->
+            false
+    end.
 
 -spec apply_size(term(), non_neg_integer()) -> non_neg_integer().
 apply_size(undefined, Nat) -> Nat;

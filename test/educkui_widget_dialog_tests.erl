@@ -23,3 +23,14 @@ title_test() ->
     %% title at BX+2=12, BY+1=4
     ?assertEqual(<<"H">>, char_at(Cells, 12, 4)),
     ?assertEqual(<<"i">>, char_at(Cells, 13, 4)).
+
+%% The dialog declares its natural size, so it lays out as its box size
+%% instead of being measured against a dummy rect (which used to be huge).
+natural_size_test() ->
+    Dialog = educkui_render_node:widget(educkui_widget_dialog,
+        #{title => <<"T">>, width => 10, height => 5}),
+    Filler = educkui_render_node:height(educkui_render_node:text(<<"X">>), 1),
+    Stack = educkui_render_node:stack(vertical, [Dialog, Filler]),
+    Cells = educkui_render:render(Stack, #dui_rect{x = 0, y = 0, width = 30, height = 20}),
+    %% The dialog fills rows 0..4, so the filler lands on row 5.
+    ?assertEqual(<<"X">>, char_at(Cells, 0, 5)).

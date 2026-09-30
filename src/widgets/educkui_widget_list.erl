@@ -1,12 +1,19 @@
 %% @doc A stateless list widget with selection highlight and optional scroll
 %% offset.
 %%
-%% Props: `{items, [binary()]}', `{selected, non_neg_integer()}' (index into the
-%% full list), `{offset, non_neg_integer()}' (number of items scrolled off the
-%% top), `{style, style()}', `{selected_style, style()}'.
+%% Props:
+%% - `{items, [binary()]}' — the rows to draw. Either pass the full list and
+%%   the matching `{offset, N}' with an absolute `{selected, I}', or pre-slice
+%%   the rows yourself and pass `{offset, 0}' with `{selected, I - N}'.
+%%   Passing the full list with `offset => 0' renders only the first page and
+%%   appears frozen once the highlight reaches the bottom row.
+%% - `{selected, non_neg_integer()}' — index of the highlighted row.
+%% - `{offset, non_neg_integer()}' — first visible index (rows scrolled off
+%%   the top).
+%% - `{style, style()}', `{selected_style, style()}'.
 %%
-%% Use `visible_range/3,4' to compute the offset that keeps the selection in
-%% view when rendering a windowed list.
+%% Use `visible_range/3,4' to compute the `{Offset, Count}' that keeps the
+%% selection visible.
 -module(educkui_widget_list).
 
 -behaviour(educkui_component).

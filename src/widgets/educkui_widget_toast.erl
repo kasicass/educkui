@@ -8,7 +8,7 @@
 
 -include("educkui.hrl").
 
--export([render/2, describe/0, default_props/0]).
+-export([render/2, describe/0, default_props/0, natural_size/1]).
 
 -spec render(map(), #dui_rect{}) -> #dui_node{}.
 render(Props, Rect) ->
@@ -29,6 +29,13 @@ describe() ->
 -spec default_props() -> map().
 default_props() ->
     #{message => <<>>, style => undefined}.
+
+%% @doc The toast is a 3-row box sized to its message. Declaring it keeps
+%% `nat_size' from measuring the centered box against a dummy rect.
+-spec natural_size(map()) -> {pos_integer(), pos_integer()}.
+natural_size(Props) ->
+    Message = maps:get(message, Props, <<>>),
+    {max(4, string:length(Message) + 4), 3}.
 
 %% ---------------------------------------------------------------------------
 %% Internal
