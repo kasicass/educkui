@@ -23,6 +23,9 @@
     sync/1,
     get_state/1,
     force_render/1,
+    set_props/3,
+    get_component_state/2,
+    size/1,
     backend_mode/0,
     capabilities/0
 ]).
@@ -80,6 +83,23 @@ get_state(Runtime) ->
 -spec force_render(pid()) -> ok.
 force_render(Runtime) ->
     gen_server:cast(Runtime, force_render).
+
+%% @doc Pushes new props to a mounted component. If the component implements
+%% the optional `handle_props/2' callback, it is invoked with the new props;
+%% otherwise the props are stored but the state is left unchanged.
+-spec set_props(pid(), term(), map()) -> ok.
+set_props(Runtime, ComponentId, Props) ->
+    gen_server:cast(Runtime, {set_props, ComponentId, Props}).
+
+%% @doc Returns the current state of a mounted component.
+-spec get_component_state(pid(), term()) -> {ok, term()} | error.
+get_component_state(Runtime, ComponentId) ->
+    gen_server:call(Runtime, {get_component_state, ComponentId}).
+
+%% @doc Returns the current terminal dimensions `{Rows, Cols}'.
+-spec size(pid()) -> {pos_integer(), pos_integer()} | undefined.
+size(Runtime) ->
+    gen_server:call(Runtime, size).
 
 %% @doc Returns the active backend mode from the persistent term cache.
 -spec backend_mode() -> raw | tty | skip | undefined.
@@ -191,6 +211,14 @@ handle_call(sync, _From, State) ->
     {reply, ok, State};
 handle_call(get_state, _From, State) ->
     {reply, State, State};
+handle_call({get_component_state, ComponentId}, _From, State) ->
+    Reply = case maps:find(ComponentId, State#dui_runtime_state.components) of
+        {ok, Comp} -> {ok, Comp#dui_component.state};
+        error -> error
+    end,
+    {reply, Reply, State};
+handle_call(size, _From, State) ->
+    {reply, State#dui_runtime_state.dimensions, State};
 handle_call(_Request, _From, State) ->
     {reply, {error, unknown_call}, State}.
 
@@ -198,6 +226,8 @@ handle_cast({event, Event}, State) ->
     {noreply, process_event(Event, State)};
 handle_cast({message, ComponentId, Message}, State) ->
     {noreply, process_event(educkui_event:custom(message, {ComponentId, Message}), State)};
+handle_cast({set_props, ComponentId, Props}, State) ->
+    {noreply, set_component_props(ComponentId, Props, State)};
 handle_cast(force_render, State) ->
     {noreply, do_render(State)};
 handle_cast(shutdown, State) ->
@@ -425,6 +455,41 @@ execute_commands(ComponentId, Commands, State) ->
                 ComponentId, ExecCmds, self()),
             State1
     end.
+
+%% @doc Updates a mounted component's state from new props.
+-spec set_component_props(term(), map(), #dui_runtime_state{}) -> #dui_runtime_state{}.
+set_component_props(ComponentId, Props, State) ->
+    case maps:find(ComponentId, State#dui_runtime_state.components) of
+        {ok, Comp} ->
+            Module = Comp#dui_component.module,
+            Comp1 = Comp#dui_component{props = Props},
+            State1 = State#dui_runtime_state{
+                components = maps:put(ComponentId, Comp1,
+                                      State#dui_runtime_state.components),
+                dirty = true},
+            case erlang:function_exported(Module, handle_props, 2) of
+                true ->
+                    Result = Module:handle_props(Props, Comp#dui_component.state),
+                    apply_props_result(ComponentId, Result, Comp1, State1);
+                false ->
+                    State1
+            end;
+        error ->
+            State
+    end.
+
+-spec apply_props_result(term(), term(), #dui_component{}, #dui_runtime_state{}) ->
+    #dui_runtime_state{}.
+apply_props_result(_ComponentId, ignore, _Comp, State) ->
+    State;
+apply_props_result(ComponentId, Result, Comp, State) ->
+    {NewState, Commands} =
+        educkui_elm:normalize_update_result(Result, Comp#dui_component.state),
+    Comp1 = Comp#dui_component{state = NewState},
+    State1 = State#dui_runtime_state{
+        components = maps:put(ComponentId, Comp1, State#dui_runtime_state.components),
+        dirty = true},
+    execute_commands(ComponentId, Commands, State1).
 
 -spec is_runtime_cmd(term()) -> boolean().
 is_runtime_cmd({focus, _}) -> true;

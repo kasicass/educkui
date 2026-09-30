@@ -23,7 +23,8 @@
     sync/1, render/1,
     screen_cells/1, screen_text/1,
     assert_text/2, assert_text/3,
-    wait_until/2, wait_until/3
+    wait_until/2, wait_until/3,
+    set_props/3, get_component_state/2
 ]).
 
 -type opt() :: {root, module()} | {size, {pos_integer(), pos_integer()}}
@@ -78,6 +79,16 @@ send_event(Pid, Event) ->
 -spec send_msg(pid(), term()) -> ok.
 send_msg(Pid, Msg) ->
     educkui_runtime:send_message(Pid, root, Msg).
+
+%% @doc Pushes new props to a mounted component (see `educkui_runtime:set_props/3').
+-spec set_props(pid(), term(), map()) -> ok.
+set_props(Pid, ComponentId, Props) ->
+    educkui_runtime:set_props(Pid, ComponentId, Props).
+
+%% @doc Returns the state of a mounted component.
+-spec get_component_state(pid(), term()) -> {ok, term()} | error.
+get_component_state(Pid, ComponentId) ->
+    educkui_runtime:get_component_state(Pid, ComponentId).
 
 %% @doc Synchronously waits for all prior requests to be processed.
 -spec sync(pid()) -> ok.

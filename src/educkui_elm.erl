@@ -22,7 +22,12 @@
     {state(), [command()]} | {state()} | noreply.
 -callback view(state()) -> term().
 
--optional_callbacks([init/1]).
+%% @doc Optional callback invoked by `educkui_runtime:set_props/3' when a parent
+%% pushes new props to an already-mounted component.
+-callback handle_props(map(), state()) ->
+    {state(), [command()]} | {state()} | noreply | ignore.
+
+-optional_callbacks([init/1, handle_props/2]).
 
 %% @doc Normalizes an `init/1' result to `{State, Commands}'.
 -spec normalize_init_result(term()) -> {state(), [command()]}.

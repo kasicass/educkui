@@ -9,7 +9,7 @@
 
 -include("educkui.hrl").
 
--export([init/1, event_to_msg/2, update/2, view/1]).
+-export([init/1, event_to_msg/2, update/2, view/1, handle_props/2]).
 
 %% ---------------------------------------------------------------------------
 %% init
@@ -23,6 +23,22 @@ init(Opts) ->
       row => length(Lines) - 1,
       col => string:length(lists:last(Lines)),
       focused => false}.
+
+%% ---------------------------------------------------------------------------
+%% handle_props
+%% ---------------------------------------------------------------------------
+
+-spec handle_props(map(), map()) -> {map(), [term()]} | ignore.
+handle_props(Props, State) ->
+    case maps:get(value, Props, undefined) of
+        Value when is_binary(Value) ->
+            Lines = binary:split(Value, <<"\n">>, [global]),
+            {State#{lines := Lines,
+                    row := length(Lines) - 1,
+                    col := string:length(lists:last(Lines))}, []};
+        _ ->
+            ignore
+    end.
 
 %% ---------------------------------------------------------------------------
 %% event_to_msg
