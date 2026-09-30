@@ -85,7 +85,13 @@ render_component(#dui_node{component_id = Id, module = Mod, props = Props},
     ChildView = (Comp#dui_component.module):view(Comp#dui_component.state),
     Rect = #dui_rect{x = X, y = Y, width = W, height = H},
     {Cells, Components2, SubTargets, SubOrder} = render(ChildView, Rect, Components1),
-    {Cells, Components2, [{Id, Rect} | SubTargets], [Id | SubOrder]}.
+    %% `focusable => false' keeps transparent overlay components (e.g. a mouse
+    %% layer) out of Tab focus traversal.
+    Order = case maps:get(focusable, Props, true) of
+        false -> SubOrder;
+        _ -> [Id | SubOrder]
+    end,
+    {Cells, Components2, [{Id, Rect} | SubTargets], Order}.
 
 -spec render_box(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->

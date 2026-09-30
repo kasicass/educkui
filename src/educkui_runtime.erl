@@ -362,8 +362,8 @@ process_event(Event, State) ->
     process_other_event(Event, State).
 
 -spec process_key_event(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
-process_key_event(#dui_event{key = tab, modifiers = Mods}, State) ->
-    handle_tab(lists:member(shift, Mods), State);
+process_key_event(#dui_event{key = tab} = Event, State) ->
+    handle_tab(Event, State);
 process_key_event(Event, State) ->
     process_other_event(Event, State).
 
@@ -438,18 +438,25 @@ dispatch_root(Event, State) ->
             State
     end.
 
--spec handle_tab(boolean(), #dui_runtime_state{}) -> #dui_runtime_state{}.
-handle_tab(Shift, State) ->
-    Order = State#dui_runtime_state.focus_order,
+%% @doc Tab moves focus between child components. When there are no focusable
+%% components the event is delivered to the root so applications can use Tab
+%% for their own field navigation.
+-spec handle_tab(#dui_event{}, #dui_runtime_state{}) -> #dui_runtime_state{}.
+handle_tab(Event, State) ->
+    case State#dui_runtime_state.focus_order of
+        [] -> dispatch_root(Event, State);
+        Order -> handle_tab_focus(Event, Order, State)
+    end.
+
+-spec handle_tab_focus(#dui_event{}, [term()], #dui_runtime_state{}) ->
+    #dui_runtime_state{}.
+handle_tab_focus(#dui_event{modifiers = Mods}, [First | _] = Order, State) ->
+    Shift = lists:member(shift, Mods),
     OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
     case OldFocus of
         undefined ->
-            case Order of
-                [] -> State;
-                [First | _] ->
-                    State1 = State#dui_runtime_state{focus = [First]},
-                    dispatch(First, educkui_event:focus(gained), State1)
-            end;
+            State1 = State#dui_runtime_state{focus = [First]},
+            dispatch(First, educkui_event:focus(gained), State1);
         _Current ->
             NewFocusStack = case Shift of
                 true -> educkui_focus:prev(State#dui_runtime_state.focus, Order);

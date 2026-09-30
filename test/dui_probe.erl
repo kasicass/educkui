@@ -13,12 +13,14 @@ init(_Opts) ->
     #{result => undefined,
       ticks => 0,
       timer => undefined,
-      size => undefined}.
+      size => undefined,
+      last_key => undefined}.
 
 -spec event_to_msg(#dui_event{}, map()) -> {msg, term()} | ignore | propagate.
 event_to_msg(#dui_event{type = key, key = run}, _State) -> {msg, run};
 event_to_msg(#dui_event{type = key, key = start_timer}, _State) -> {msg, start_timer};
 event_to_msg(#dui_event{type = key, key = cancel_timer}, _State) -> {msg, cancel_timer};
+event_to_msg(#dui_event{type = key, key = Key}, _State) -> {msg, {key, Key}};
 event_to_msg(#dui_event{type = custom, key = command_result,
                         content = {_Cid, Result}}, _State) ->
     {msg, {command_result, Result}};
@@ -46,6 +48,8 @@ update(tick, State) ->
     {State#{ticks := maps:get(ticks, State) + 1}, []};
 update({resize, W, H}, State) ->
     {State#{size := {W, H}}, []};
+update({key, Key}, State) ->
+    {State#{last_key := Key}, []};
 update(_Msg, State) ->
     {State, []}.
 

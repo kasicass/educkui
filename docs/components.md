@@ -138,6 +138,11 @@ components discovered during rendering; mouse clicks move focus by hit
 testing. Components are notified through `focus(gained)` and `focus(lost)`
 events.
 
+When there are no focusable components, Tab is delivered to the root so it
+can implement its own field navigation (e.g. a form). Pass
+`focusable => false` in a component's props to keep a transparent overlay
+(such as a mouse-capturing layer) out of Tab traversal.
+
 ## Runtime control
 
 - `educkui:run(Opts)` — start the runtime and block until it exits.

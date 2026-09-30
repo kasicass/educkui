@@ -88,6 +88,16 @@ root_receives_initial_size_test() ->
     ok = educkui_runtime:shutdown(Pid),
     wait_for_exit(Pid).
 
+%% With no focusable child components, Tab is delivered to the root so
+%% applications can implement their own field navigation.
+tab_reaches_root_without_focusable_components_test() ->
+    {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
+    ok = educkui_runtime:sync(Pid),
+    educkui_runtime:send_event(Pid, educkui_event:key(tab)),
+    ok = wait_until(Pid, fun(S) -> maps:get(last_key, S) =:= tab end),
+    ok = educkui_runtime:shutdown(Pid),
+    wait_for_exit(Pid).
+
 root_receives_resize_test() ->
     {ok, Pid} = educkui_runtime:start_link([{root, dui_probe}, {skip_terminal, true}]),
     ok = educkui_runtime:sync(Pid),
