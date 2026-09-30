@@ -14,10 +14,24 @@ same_position_test() ->
     ?assertEqual(<<>>, iolist_to_binary(Seq)),
     ?assertEqual(0, educkui_cursor_optimizer:bytes_saved(C2)).
 
-small_right_move_uses_spaces_test() ->
+%% Small right moves must NOT use spaces: writing spaces would erase any
+%% unchanged character occupying the skipped cells.
+small_right_move_uses_cursor_forward_test() ->
     C = educkui_cursor_optimizer:new(),
     {Seq, _C2} = educkui_cursor_optimizer:move_to(C, 1, 4),
-    ?assertEqual(<<"   ">>, iolist_to_binary(Seq)).
+    ?assertEqual(<<"\e[3C">>, iolist_to_binary(Seq)).
+
+no_space_bytes_test() ->
+    Cases = [{1, 1, 1, 4}, {1, 4, 1, 1}, {2, 1, 1, 5}, {1, 5, 4, 2},
+             {3, 7, 1, 3}, {1, 1, 2, 2}],
+    lists:foreach(
+        fun({R1, C1, R2, C2}) ->
+            C = educkui_cursor_optimizer:new(R1, C1),
+            {Seq, _} = educkui_cursor_optimizer:move_to(C, R2, C2),
+            Bin = iolist_to_binary(Seq),
+            ?assertEqual(nomatch, binary:match(Bin, <<" ">>))
+        end,
+        Cases).
 
 down_move_test() ->
     C = educkui_cursor_optimizer:new(),

@@ -1,9 +1,14 @@
 %% @doc Optimizes cursor movement by selecting the cheapest movement option.
 %%
 %% Instead of always using absolute positioning (`ESC[r;cH'), the optimizer
-%% computes the byte cost of absolute, relative, carriage-return, home and
-%% space-based movement and picks the minimum. This can cut cursor movement
-%% bytes significantly compared to naive positioning.
+%% computes the byte cost of absolute, relative, carriage-return and home
+%% movement and picks the minimum. This can cut cursor movement bytes
+%% significantly compared to naive positioning.
+%%
+%% Note: space-based movement is deliberately not used. Writing spaces to move
+%% the cursor overwrites whatever the terminal currently shows in those cells,
+%% which silently erases unchanged characters when only part of a row is
+%% redrawn.
 -module(educkui_cursor_optimizer).
 
 -include("educkui.hrl").
@@ -122,7 +127,6 @@ generate_options(FromRow, FromCol, ToRow, ToCol) ->
         ++ cr_options(ToCol, RowDiff)
         ++ cr_col_options(RowDiff, ToCol)
         ++ home_option(ToRow, ToCol)
-        ++ space_option(RowDiff, ColDiff)
         ++ newline_options(RowDiff, FromCol, ToCol).
 
 -spec absolute_option(pos_integer(), pos_integer()) -> {iodata(), pos_integer()}.
@@ -151,13 +155,8 @@ cr_options(_ToCol, _RowDiff) ->
 cr_col_options(RowDiff, ToCol) when ToCol > 1 ->
     {VSeq, VCost} = vertical_sequence(RowDiff),
     HDiff = ToCol - 1,
-    case HDiff > 0 andalso HDiff =< ?SPACE_THRESHOLD of
-        true ->
-            [{[$\r, VSeq, lists:duplicate(HDiff, $\s)], 1 + VCost + HDiff}];
-        false ->
-            {HSeq, HCost} = horizontal_sequence(HDiff),
-            [{[$\r, VSeq, HSeq], 1 + VCost + HCost}]
-    end;
+    {HSeq, HCost} = horizontal_sequence(HDiff),
+    [{[$\r, VSeq, HSeq], 1 + VCost + HCost}];
 cr_col_options(_RowDiff, _ToCol) ->
     [].
 
@@ -165,12 +164,6 @@ cr_col_options(_RowDiff, _ToCol) ->
 home_option(1, 1) ->
     [{"\e[H", 3}];
 home_option(_ToRow, _ToCol) ->
-    [].
-
--spec space_option(integer(), integer()) -> [{iodata(), pos_integer()}].
-space_option(0, ColDiff) when ColDiff > 0, ColDiff =< ?SPACE_THRESHOLD ->
-    [{lists:duplicate(ColDiff, $\s), ColDiff}];
-space_option(_RowDiff, _ColDiff) ->
     [].
 
 %% Bare `\n' is avoided: with OPOST disabled in raw mode it does not return
