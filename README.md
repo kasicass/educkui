@@ -143,6 +143,21 @@ Or run the full pipeline:
 ./scripts/ci.sh
 ```
 
+## CI and publishing
+
+GitHub Actions runs `./scripts/ci.sh` on every push and pull request
+(`.github/workflows/ci.yml`).
+
+To publish to [hex.pm](https://hex.pm):
+
+```bash
+# bump vsn in src/educkui.app.src, then tag and push
+rebar3 as publish hex publish
+```
+
+A tag push (`v*`) also triggers `.github/workflows/publish.yml`, which
+publishes using the `HEX_API_KEY` GitHub secret.
+
 ## Documentation
 
 See `docs/` for the user guide:
