@@ -270,51 +270,37 @@ handle_enter(State) ->
 
 -spec insert_char(map(), binary()) -> {map(), [term()]}.
 insert_char(State, Char) ->
-    Id = maps:get(focused_field, State),
-    Value = field_value(State, Id),
-    Cursor = maps:get(cursor, State),
-    {Left, Right} = split_at(Value, Cursor),
-    NewValue = <<Left/binary, Char/binary, Right/binary>>,
-    {State1, Cmds} = set_value(State, Id, NewValue),
-    {State1#{cursor := Cursor + string:length(Char)}, Cmds}.
+    edit_field(State, fun(LE) -> educkui_lineedit:insert(Char, LE) end).
 
 -spec edit_text(map(), backspace | delete) -> {map(), [term()]}.
 edit_text(State, backspace) ->
     case current_text_field(State) of
-        false ->
-            {State, []};
-        true ->
-            Id = maps:get(focused_field, State),
-            Value = field_value(State, Id),
-            Cursor = maps:get(cursor, State),
-            case Cursor > 0 of
-                false ->
-                    {State, []};
-                true ->
-                    {Left, Right} = split_at(Value, Cursor),
-                    Left2 = string:slice(Left, 0, string:length(Left) - 1),
-                    NewValue = <<Left2/binary, Right/binary>>,
-                    {State1, Cmds} = set_value(State, Id, NewValue),
-                    {State1#{cursor := Cursor - 1}, Cmds}
-            end
+        false -> {State, []};
+        true -> edit_field(State, fun educkui_lineedit:backspace/1)
     end;
 edit_text(State, delete) ->
     case current_text_field(State) of
-        false ->
-            {State, []};
+        false -> {State, []};
+        true -> edit_field(State, fun educkui_lineedit:delete/1)
+    end.
+
+%% @doc Applies a line-edit operation to the focused text field, emitting an
+%% `on_change' command only when the value or cursor actually changed.
+-spec edit_field(map(), fun((educkui_lineedit:state()) -> educkui_lineedit:state())) ->
+    {map(), [term()]}.
+edit_field(State, Fun) ->
+    Id = maps:get(focused_field, State),
+    Value0 = field_value(State, Id),
+    Cursor0 = maps:get(cursor, State),
+    LE1 = Fun(educkui_lineedit:new(Value0, Cursor0)),
+    Value1 = educkui_lineedit:value(LE1),
+    Cursor1 = educkui_lineedit:cursor(LE1),
+    case Value1 =:= Value0 andalso Cursor1 =:= Cursor0 of
         true ->
-            Id = maps:get(focused_field, State),
-            Value = field_value(State, Id),
-            Cursor = maps:get(cursor, State),
-            case Cursor < string:length(Value) of
-                false ->
-                    {State, []};
-                true ->
-                    {Left, Right} = split_at(Value, Cursor),
-                    Right2 = string:slice(Right, 1),
-                    NewValue = <<Left/binary, Right2/binary>>,
-                    set_value(State, Id, NewValue)
-            end
+            {State, []};
+        false ->
+            {State1, Cmds} = set_value(State, Id, Value1),
+            {State1#{cursor := Cursor1}, Cmds}
     end.
 
 -spec cursor_move(map(), integer()) -> {map(), [term()]}.
@@ -769,10 +755,6 @@ find_option_index(Value, [O | T], I) ->
         true -> I;
         false -> find_option_index(Value, T, I + 1)
     end.
-
--spec split_at(binary(), non_neg_integer()) -> {binary(), binary()}.
-split_at(Bin, N) ->
-    {string:slice(Bin, 0, N), string:slice(Bin, N)}.
 
 -spec pad_display(binary(), non_neg_integer()) -> binary().
 pad_display(Bin, W) ->
