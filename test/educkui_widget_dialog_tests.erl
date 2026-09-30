@@ -24,6 +24,17 @@ title_test() ->
     ?assertEqual(<<"H">>, char_at(Cells, 12, 4)),
     ?assertEqual(<<"i">>, char_at(Cells, 13, 4)).
 
+content_nodes_test() ->
+    Node = educkui_widget_dialog:render(
+        #{title => <<"T">>, width => 12, height => 6,
+          content_nodes => [educkui_render_node:text(<<"AB">>),
+                            educkui_render_node:text(<<"CD">>)]},
+        #dui_rect{width = 30, height = 12}),
+    Cells = Node#dui_node.cells,
+    %% BX = (30-12) div 2 = 9, BY = (12-6) div 2 = 3; content starts at (11,5).
+    ?assertEqual(<<"A">>, char_at(Cells, 11, 5)),
+    ?assertEqual(<<"C">>, char_at(Cells, 11, 6)).
+
 %% The dialog declares its natural size, so it lays out as its box size
 %% instead of being measured against a dummy rect (which used to be huge).
 natural_size_test() ->

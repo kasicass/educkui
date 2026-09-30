@@ -6,8 +6,13 @@
 %% `Id = {dui_dialog_button, Label}'.
 %%
 %% Props: `{title, binary()}', `{content, binary()}',
-%% `{buttons, [binary()]}', `{width, pos_integer()}', `{height, pos_integer()}',
-%% `{style, term()}'.
+%% `{content_nodes, [#dui_node{}]}', `{buttons, [binary()]}',
+%% `{width, pos_integer()}', `{height, pos_integer()}', `{style, term()}'.
+%%
+%% `content' is a single content line. For multi-line or styled content use
+%% `content_nodes' (a list of render nodes stacked in the box interior); it
+%% takes precedence over `content'. Content nodes are display-only: any child
+%% components they declare are not registered as event targets.
 -module(educkui_widget_dialog).
 
 -behaviour(educkui_component).
@@ -20,6 +25,7 @@
 render(Props, Rect) ->
     Title = maps:get(title, Props, <<>>),
     Content = maps:get(content, Props, <<>>),
+    ContentNodes = maps:get(content_nodes, Props, undefined),
     Buttons = maps:get(buttons, Props, []),
     Style = style_from_prop(maps:get(style, Props, undefined)),
     BoxW = min(maps:get(width, Props, 40), max(3, Rect#dui_rect.width)),
@@ -31,7 +37,8 @@ render(Props, Rect) ->
     BorderCells = border_cells(BX, BY, BoxW, BoxH, Style),
     TitleCells = text_cells(Title, BX + 2, BY + 1, BoxW - 4,
                             educkui_style:from([{bold, true}])),
-    ContentCells = text_cells(Content, BX + 2, BY + 2, BoxW - 4, undefined),
+    ContentCells = content_cells(Content, ContentNodes, BX + 2, BY + 2,
+                                 max(0, BoxW - 4), max(0, BoxH - 3)),
     BoxCells = Background ++ BorderCells ++ TitleCells ++ ContentCells,
 
     case Buttons of
@@ -49,8 +56,8 @@ describe() ->
 
 -spec default_props() -> map().
 default_props() ->
-    #{title => <<>>, content => <<>>, buttons => [<<"OK">>],
-      width => 40, height => 8, style => undefined}.
+    #{title => <<>>, content => <<>>, content_nodes => undefined,
+      buttons => [<<"OK">>], width => 40, height => 8, style => undefined}.
 
 %% @doc The requested box size. Declaring it keeps `nat_size' from measuring
 %% the centered box against a dummy rect (which would be huge).
@@ -61,6 +68,19 @@ natural_size(Props) ->
 %% ---------------------------------------------------------------------------
 %% Internal
 %% ---------------------------------------------------------------------------
+
+%% @doc Cells for the box interior: either a single `Content' line, or a
+%% vertical stack of `ContentNodes' rendered into the interior sub-rect.
+-spec content_cells(binary(), [term()] | undefined, integer(), integer(),
+                    non_neg_integer(), non_neg_integer()) ->
+    [{integer(), integer(), term()}].
+content_cells(Content, undefined, X, Y, W, _H) ->
+    text_cells(Content, X, Y, W, undefined);
+content_cells(_Content, Nodes, X, Y, W, H) when is_list(Nodes) ->
+    SubRect = #dui_rect{x = X, y = Y, width = W, height = H},
+    educkui_render:render(educkui_render_node:stack(vertical, Nodes), SubRect);
+content_cells(Content, _Nodes, X, Y, W, _H) ->
+    text_cells(Content, X, Y, W, undefined).
 
 -spec button_nodes([binary()], integer(), integer()) -> [#dui_node{}].
 button_nodes(Buttons, BX, BY) ->
