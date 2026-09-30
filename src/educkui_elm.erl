@@ -22,7 +22,7 @@
     {state(), [command()]} | {state()} | noreply.
 -callback view(state()) -> term().
 
-%% @doc Optional callback invoked by `educkui_runtime:set_props/3' when a parent
+%% Optional callback invoked by `educkui_runtime:set_props/3' when a parent
 %% pushes new props to an already-mounted component.
 -callback handle_props(map(), state()) ->
     {state(), [command()]} | {state()} | noreply | ignore.

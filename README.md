@@ -23,10 +23,14 @@ concurrency — to write robust terminal applications using
 - Component tree with focus management (Tab/Shift+Tab, mouse click) and
   event bubbling
 - Widget library: label, block, button, progress, list, text input, text
-  area, pick list, scrollable list, table, tabs, split pane, tree view,
-  viewport, scroll bar, dialog, alert dialog, toast, context menu, gauge,
-  line chart, sparkline, bar chart, canvas, process monitor, supervision
-  tree viewer, log viewer, form builder, stream
+  area, text view, pick list, scrollable list, table, tabs, split pane, tree
+  view, viewport, scroll bar, dialog, alert dialog, toast, context menu, gauge,
+  line chart, sparkline, bar chart, canvas, spinner, process monitor,
+  supervision tree viewer, log viewer, form builder, stream
+- Async command results, `interval`/`cancel_interval` timers, terminal size
+  delivery, controlled components (`set_props`/`get_component_state`)
+- Pure `educkui_lineedit`, OSC 52 clipboard, bounded `educkui_log`, and the
+  `educkui_test` headless harness
 
 ## Requirements
 

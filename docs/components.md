@@ -146,3 +146,93 @@ events.
 - `educkui_runtime:send_message(Runtime, ComponentId, Message)` — send a
   directed message to a component.
 - `educkui_runtime:force_render(Runtime)` — force an immediate render.
+- `educkui_runtime:size(Runtime)` — current `{Rows, Cols}`.
+- `educkui_runtime:copy_to_clipboard(Text)` — OSC 52 clipboard copy (no-op on
+  the `skip` backend).
+- `educkui_runtime:logs(Runtime)` / `clear_logs(Runtime)` — buffered log events
+  (see "Logs" below).
+
+## Asynchronous commands
+
+`update/2` may return `{exec, Fun}` commands. `Fun/0` runs in a separate
+process and its result is delivered back to the component that returned it as
+`#dui_event{type = custom, key = command_result, content = {Id, Result}}`:
+
+```erlang
+event_to_msg(#dui_event{type = custom, key = command_result,
+                        content = {_Id, Result}}, State) ->
+    {msg, {result, Result}}.
+```
+
+## Timers and intervals
+
+Use `educkui_command:interval/2,3` for periodic work (TTL countdowns, metrics
+refresh, watch mode). The runtime schedules it with `erlang:send_after/3` and
+delivers the message to the root component as a `parent` event:
+
+```erlang
+update(start_clock, State) ->
+    {State, [educkui_command:interval(tick, 1000)]};
+update(tick, State) ->
+    {State#{now := erlang:system_time(second)}, []}.
+
+event_to_msg(#dui_event{type = custom, key = parent, content = Msg}, _State) ->
+    {msg, Msg}.
+```
+
+`interval/3` lets you supply the timer reference so it can be cancelled with
+`educkui_command:cancel_interval/1`. All pending timers are cancelled when the
+runtime stops.
+
+## Controlled components and state access
+
+By default a child component's state is private and its props are only read
+once at init. To drive a component from its parent, mount it and push props
+explicitly:
+
+```erlang
+%% parent update/2
+educkui_runtime:set_props(Runtime, name_input, #{value => <<"Bob">>}),
+```
+
+If the component implements the optional `handle_props/2` callback it will
+adopt the new props; `educkui_widget_text_input` and
+`educkui_widget_text_area` do. Read back state with
+`educkui_runtime:get_component_state(Runtime, Id)`.
+
+For reusable single-line editing logic, use the pure `educkui_lineedit`
+module (`new/1`, `insert/2`, `backspace/1`, `delete/1`, `move/2`, `home/1`,
+`'end'/1`).
+
+## Logs
+
+While the alternate screen is active the runtime installs
+`educkui_log_handler`, which buffers `logger` events in `educkui_log` instead of
+writing them to the terminal (terminal handlers are silenced for the duration).
+Applications can render them, e.g. on a Logs screen:
+
+```erlang
+Lines = [format_log(E) || E <- educkui_runtime:logs(Runtime)].
+```
+
+## Clipboard
+
+`educkui_runtime:copy_to_clipboard/1` emits an OSC 52 sequence to copy text to
+the system clipboard. Terminals that do not support OSC 52 silently ignore it;
+an application may fall back to `pbcopy`/`xclip`/`wl-copy` if needed.
+
+## Testing
+
+`educkui_test` starts a headless runtime (the `skip` backend) and drives it:
+
+```erlang
+Pid = educkui_test:start(#{root => my_app, size => {24, 80}}),
+ok = educkui_test:send_key(Pid, down),
+ok = educkui_test:assert_text(Pid, <<"Selected">>),
+ok = educkui_test:set_props(Pid, name_input, #{value => <<"x">>}),
+{ok, State} = educkui_test:get_component_state(Pid, name_input),
+ok = educkui_test:stop(Pid).
+```
+
+`wait_until/2,3` polls the root state until a predicate holds, which is handy
+for asynchronous `{exec, ...}` results.
