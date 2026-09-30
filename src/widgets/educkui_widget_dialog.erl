@@ -2,12 +2,12 @@
 %%
 %% Renders a centered bordered box with a title and content text, plus a row
 %% of focusable push-button components at the bottom. Each button sends
-%% `{parent, {button, Id}}` to the root when activated (Enter/Space), with
-%% `Id = {dui_dialog_button, Label}`.
+%% `{parent, {button, Id}}' to the root when activated (Enter/Space), with
+%% `Id = {dui_dialog_button, Label}'.
 %%
-%% Props: `{title, binary()}`, `{content, binary()}`,
-%% `{buttons, [binary()]}`, `{width, pos_integer()}`, `{height, pos_integer()}`,
-%% `{style, term()}`.
+%% Props: `{title, binary()}', `{content, binary()}',
+%% `{buttons, [binary()]}', `{width, pos_integer()}', `{height, pos_integer()}',
+%% `{style, term()}'.
 -module(educkui_widget_dialog).
 
 -behaviour(educkui_component).

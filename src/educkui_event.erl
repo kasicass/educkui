@@ -2,7 +2,7 @@
 %%
 %% Events represent terminal input (keys, mouse, focus changes), resize
 %% notifications, clipboard pastes, timer ticks and application-defined
-%% custom events. They are implemented as tagged `#dui_event{}` records.
+%% custom events. They are implemented as tagged `#dui_event{}' records.
 -module(educkui_event).
 
 -include("educkui.hrl").

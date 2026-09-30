@@ -1,6 +1,6 @@
 %% @doc Main entry point for educkui.
 %%
-%% `run/1` starts the runtime and blocks until it shuts down; `start/1`
+%% `run/1' starts the runtime and blocks until it shuts down; `start/1'
 %% starts the runtime without blocking.
 -module(educkui).
 

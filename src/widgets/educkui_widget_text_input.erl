@@ -1,9 +1,9 @@
 %% @doc A stateful single-line text input widget.
 %%
-%% Implements The Elm Architecture: `init/1` takes `{value, Binary}` and
-%% optionally `{placeholder, Binary}`; `event_to_msg/2` maps keys and focus
-%% events to messages; `update/2` maintains `value` and `cursor` (both in
-%% grapheme counts); `view/1` renders the value with a reverse-video cursor
+%% Implements The Elm Architecture: `init/1' takes `{value, Binary}' and
+%% optionally `{placeholder, Binary}'; `event_to_msg/2' maps keys and focus
+%% events to messages; `update/2' maintains `value' and `cursor' (both in
+%% grapheme counts); `view/1' renders the value with a reverse-video cursor
 %% cell when focused.
 -module(educkui_widget_text_input).
 

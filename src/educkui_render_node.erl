@@ -1,8 +1,8 @@
 %% @doc Render tree node constructors.
 %%
 %% Render nodes are the output of component rendering. They form a tree that
-%% the renderer converts into terminal buffer cells. Node types: `text`,
-%% `box`, `stack`, `cells`, `empty`.
+%% the renderer converts into terminal buffer cells. Node types: `text',
+%% `box', `stack', `cells', `empty'.
 -module(educkui_render_node).
 
 -include("educkui.hrl").
@@ -78,7 +78,7 @@ cells(Cells, Opts) when is_list(Cells) ->
     }.
 
 %% @doc Creates a stateless-widget node. The renderer calls
-%% `Module:render(Props, Rect)` and renders the result within this node's rect.
+%% `Module:render(Props, Rect)' and renders the result within this node's rect.
 -spec widget(module(), map()) -> #dui_node{}.
 widget(Module, Props) -> widget(Module, Props, []).
 
@@ -102,7 +102,7 @@ overlay(Children, _Opts) when is_list(Children) ->
     #dui_node{type = overlay, children = Children}.
 
 %% @doc Creates a child-component node. The runtime resolves it by looking up
-%% (or initializing) the component's state, calling its `view/1`, and rendering
+%% (or initializing) the component's state, calling its `view/1', and rendering
 %% the result within this node's rect.
 -spec component(term(), module()) -> #dui_node{}.
 component(Id, Module) -> component(Id, Module, #{}).

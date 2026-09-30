@@ -1,9 +1,9 @@
 %% @doc Behaviour for input handlers.
 %%
-%% An input handler converts terminal input into `#dui_event{}` records.
+%% An input handler converts terminal input into `#dui_event{}' records.
 %% Two implementations are provided:
-%% - `educkui_input_raw` - character-by-character input in raw mode
-%% - `educkui_input_tty` - line-based input in cooked/tty mode
+%% - `educkui_input_raw' - character-by-character input in raw mode
+%% - `educkui_input_tty' - line-based input in cooked/tty mode
 -module(educkui_input).
 
 -export_type([state/0, poll_result/0]).

@@ -1,8 +1,8 @@
 %% @doc ANSI escape sequence generation.
 %%
 %% All functions return iolists for efficient concatenation and writing
-%% (see the OTP Efficiency Guide: avoid `lists:flatten/1`, write deep iolists
-%% directly with `io:put_chars/2`).
+%% (see the OTP Efficiency Guide: avoid `lists:flatten/1', write deep iolists
+%% directly with `io:put_chars/2').
 -module(educkui_ansi).
 
 -export([

@@ -1,7 +1,7 @@
 %% @doc A stateless distributed-cluster dashboard widget.
 %%
-%% Props: `{nodes, [{Name :: binary(), Slogan :: binary()}]}`. Renders a header
-%% plus one row per node. `collect/0` builds a snapshot from the local node and
+%% Props: `{nodes, [{Name :: binary(), Slogan :: binary()}]}'. Renders a header
+%% plus one row per node. `collect/0' builds a snapshot from the local node and
 %% the currently connected nodes.
 -module(educkui_widget_cluster_dashboard).
 

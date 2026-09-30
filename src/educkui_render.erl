@@ -1,8 +1,8 @@
 %% @doc Rasterizes a render node tree into positioned cells.
 %%
-%% Produces `{X, Y, #dui_cell{}}` tuples with 0-based coordinates relative to
-%% the given rect's origin. `render/3` also resolves child-component nodes:
-%% it initializes or looks up each component's state, calls its `view/1`, and
+%% Produces `{X, Y, #dui_cell{}}' tuples with 0-based coordinates relative to
+%% the given rect's origin. `render/3' also resolves child-component nodes:
+%% it initializes or looks up each component's state, calls its `view/1', and
 %% returns the updated component tree, mouse-hit targets and focus order.
 -module(educkui_render).
 
@@ -16,7 +16,7 @@ render(Node, Rect) ->
     {Cells, _Components, _Targets, _Order} = render(Node, Rect, #{}),
     Cells.
 
-%% @doc Renders `Node` within `Rect`, resolving child components.
+%% @doc Renders `Node' within `Rect', resolving child components.
 -spec render(#dui_node{}, #dui_rect{}, map()) ->
     {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.
 render(#dui_node{} = Node, #dui_rect{x = X, y = Y, width = W, height = H},
@@ -67,7 +67,7 @@ render_at(#dui_node{x = Ax, y = Ay, children = [Child]}, X, Y, W, H, Components)
 render_at(#dui_node{}, _X, _Y, _W, _H, Components) ->
     {[], Components, [], []}.
 
-%% @doc Renders a stateless widget by calling `Module:render(Props, Rect)`.
+%% @doc Renders a stateless widget by calling `Module:render(Props, Rect)'.
 -spec render_widget(#dui_node{}, integer(), integer(), non_neg_integer(),
     non_neg_integer(), map()) ->
     {[{integer(), integer(), #dui_cell{}}], map(), [{term(), #dui_rect{}}], [term()]}.

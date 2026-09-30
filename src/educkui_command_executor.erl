@@ -1,6 +1,6 @@
 %% @doc Asynchronous command executor.
 %%
-%% Commands returned by component `update/2` are executed here so that side
+%% Commands returned by component `update/2' are executed here so that side
 %% effects stay out of the component and runtime processes. Results are sent
 %% back to the runtime process.
 -module(educkui_command_executor).
@@ -18,7 +18,7 @@
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
-%% @doc Executes `Commands` for `ComponentId`, sending results to `Runtime`.
+%% @doc Executes `Commands' for `ComponentId', sending results to `Runtime'.
 -spec execute(pid(), term(), [term()], pid()) -> ok.
 execute(Executor, ComponentId, Commands, Runtime)
         when is_pid(Executor), is_list(Commands), is_pid(Runtime) ->

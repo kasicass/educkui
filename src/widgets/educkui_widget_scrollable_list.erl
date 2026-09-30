@@ -1,7 +1,7 @@
 %% @doc A stateful scrollable list with keyboard navigation.
 %%
-%% Props: `{items, [binary()]}` (required), `{height, pos_integer()}`
-%% (viewport height, default 10), `{selected, non_neg_integer()}`.
+%% Props: `{items, [binary()]}' (required), `{height, pos_integer()}'
+%% (viewport height, default 10), `{selected, non_neg_integer()}'.
 %%
 %% Up/Down move the selection, PageUp/PageDown/Home/End scroll, and the
 %% offset is kept so the selected item is always visible.

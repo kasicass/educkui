@@ -1,11 +1,11 @@
 %% @doc A stateful split-pane widget.
 %%
-%% Props: `{direction, horizontal | vertical}` (default horizontal),
-%% `{children, [#dui_node{}]}` (two render trees), `{split, pos_integer()}`
+%% Props: `{direction, horizontal | vertical}' (default horizontal),
+%% `{children, [#dui_node{}]}' (two render trees), `{split, pos_integer()}'
 %% (initial size of the first pane in columns/rows).
 %%
 %% Left/Right adjust the split for horizontal panes; Up/Down for vertical.
-%% The first pane is fixed at `split`, the second flexes to fill the rest.
+%% The first pane is fixed at `split', the second flexes to fill the rest.
 -module(educkui_widget_split_pane).
 
 -behaviour(educkui_elm).

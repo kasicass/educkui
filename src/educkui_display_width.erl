@@ -5,7 +5,7 @@
 %% - East Asian and wide/emoji presentation characters are double-width (2)
 %% - Combining characters and control characters are zero-width (0)
 %%
-%% The implementation uses `unicode_util:is_wide/1` (OTP 28) for accurate
+%% The implementation uses `unicode_util:is_wide/1' (OTP 28) for accurate
 %% wide-character detection, augmented with combining/control ranges.
 -module(educkui_display_width).
 
@@ -37,9 +37,9 @@ double_width(Grapheme) when is_binary(Grapheme) ->
 zero_width(Grapheme) when is_binary(Grapheme) ->
     width(Grapheme) =:= 0.
 
-%% @doc Truncates a string to at most `MaxWidth` display columns.
+%% @doc Truncates a string to at most `MaxWidth' display columns.
 %%
-%% Returns `{TruncatedString, ActualWidth}`. Truncation is performed on
+%% Returns `{TruncatedString, ActualWidth}'. Truncation is performed on
 %% grapheme boundaries so that no combining sequence is split.
 -spec truncate(binary(), non_neg_integer()) -> {binary(), non_neg_integer()}.
 truncate(String, MaxWidth) when is_binary(String), is_integer(MaxWidth), MaxWidth >= 0 ->
@@ -95,8 +95,8 @@ to_codepoints(Bin) ->
         {incomplete, L, _Rest} -> L
     end.
 
-%% `string:to_graphemes/1` returns each grapheme as `char() | [char()]`;
-%% convert it back to a binary for `width/1`.
+%% `string:to_graphemes/1' returns each grapheme as `char() | [char()]';
+%% convert it back to a binary for `width/1'.
 -spec grapheme_to_binary(char() | [char()]) -> binary().
 grapheme_to_binary(G) ->
     unicode:characters_to_binary([G]).

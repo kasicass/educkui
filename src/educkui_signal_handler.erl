@@ -1,8 +1,8 @@
 %% @doc Forwards SIGWINCH (terminal resize) to the runtime process.
 %%
-%% Installed as a handler on the kernel's `erl_signal_server` gen_event
-%% process (the same mechanism `prim_tty` uses). On `sigwinch`, sends
-%% `{educkui_sigwinch}` to the runtime so it can re-detect and re-render.
+%% Installed as a handler on the kernel's `erl_signal_server' gen_event
+%% process (the same mechanism `prim_tty' uses). On `sigwinch', sends
+%% `{educkui_sigwinch}' to the runtime so it can re-detect and re-render.
 -module(educkui_signal_handler).
 
 -behaviour(gen_event).

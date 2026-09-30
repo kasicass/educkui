@@ -1,8 +1,8 @@
 %% @doc A stateless ASCII line chart widget.
 %%
-%% Plots a series of values as `*` points across the widget's width, mapping
-%% each sampled value into the vertical range. Props: `{values, [number()]}`,
-%% `{style, term()}`.
+%% Plots a series of values as `*' points across the widget's width, mapping
+%% each sampled value into the vertical range. Props: `{values, [number()]}',
+%% `{style, term()}'.
 -module(educkui_widget_line_chart).
 
 -behaviour(educkui_component).

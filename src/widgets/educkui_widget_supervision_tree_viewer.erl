@@ -1,6 +1,6 @@
 %% @doc A stateless supervision tree viewer.
 %%
-%% Props: `{tree, [{Label :: binary(), Children :: [same_shape()]}]}`. Renders
+%% Props: `{tree, [{Label :: binary(), Children :: [same_shape()]}]}'. Renders
 %% the tree fully expanded with indentation.
 -module(educkui_widget_supervision_tree_viewer).
 

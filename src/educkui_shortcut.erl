@@ -1,8 +1,8 @@
 %% @doc Global keyboard shortcut matching.
 %%
-%% A shortcut spec is `{KeySpec, Modifiers}` where `KeySpec` is an atom
-%% (`enter`, `up`, ...) or a binary (`<<"q">>`) and `Modifiers` is a list of
-%% modifier atoms (`ctrl`, `shift`, `alt`, `meta`). Matching is exact on both
+%% A shortcut spec is `{KeySpec, Modifiers}' where `KeySpec' is an atom
+%% (`enter', `up', ...) or a binary (`<<"q">>') and `Modifiers' is a list of
+%% modifier atoms (`ctrl', `shift', `alt', `meta'). Matching is exact on both
 %% key and modifier set.
 -module(educkui_shortcut).
 

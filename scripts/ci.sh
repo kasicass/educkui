@@ -19,4 +19,7 @@ rebar3 xref
 echo "==> dialyzer"
 rebar3 dialyzer
 
+echo "==> edoc"
+rebar3 edoc
+
 echo "==> done"

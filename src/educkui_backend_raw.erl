@@ -1,7 +1,7 @@
 %% @doc Raw terminal backend.
 %%
 %% Assumes raw mode has already been activated (by the selector via
-%% `educkui_terminal:activate_raw_mode/0`). Performs alternate screen, cursor,
+%% `educkui_terminal:activate_raw_mode/0'). Performs alternate screen, cursor,
 %% mouse and rendering setup, and draws cells using run detection, cursor
 %% optimization and style deltas.
 -module(educkui_backend_raw).

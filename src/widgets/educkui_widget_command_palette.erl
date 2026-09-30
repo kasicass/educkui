@@ -1,8 +1,8 @@
 %% @doc A stateful command palette with type-ahead filtering.
 %%
-%% Props: `{commands, [{Label :: binary(), Payload :: term()}]}`. Type to filter
+%% Props: `{commands, [{Label :: binary(), Payload :: term()}]}'. Type to filter
 %% (case-insensitive substring), Up/Down move the highlight, Enter executes the
-%% highlighted command by sending `{parent, {command, Payload}}` to the root.
+%% highlighted command by sending `{parent, {command, Payload}}' to the root.
 -module(educkui_widget_command_palette).
 
 -behaviour(educkui_elm).

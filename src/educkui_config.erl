@@ -1,6 +1,6 @@
 %% @doc Configuration helpers.
 %%
-%% Runtime options take precedence over `educkui` application environment
+%% Runtime options take precedence over `educkui' application environment
 %% values.
 -module(educkui_config).
 

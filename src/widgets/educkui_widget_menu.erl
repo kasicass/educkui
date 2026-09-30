@@ -1,8 +1,8 @@
 %% @doc A stateful hierarchical menu widget.
 %%
-%% Props: `{items, [{Id, Label, Children}]}` where `Children = []` marks a leaf
-%% item (activating it sends `{parent, {menu_activate, Id}}` to the root), and
-%% a non-empty `Children` opens a submenu.
+%% Props: `{items, [{Id, Label, Children}]}' where `Children = []' marks a leaf
+%% item (activating it sends `{parent, {menu_activate, Id}}' to the root), and
+%% a non-empty `Children' opens a submenu.
 %%
 %% Up/Down move the selection; Right/Enter open a submenu or activate a leaf;
 %% Left goes back; Esc propagates (so the app can close the menu).

@@ -134,6 +134,7 @@ rebar3 eunit
 rebar3 ct
 rebar3 xref
 rebar3 dialyzer
+rebar3 edoc
 ```
 
 Or run the full pipeline:
@@ -141,6 +142,18 @@ Or run the full pipeline:
 ```bash
 ./scripts/ci.sh
 ```
+
+## Documentation
+
+See `docs/` for the user guide:
+
+- [architecture](docs/architecture.md)
+- [events](docs/events.md)
+- [components](docs/components.md)
+- [widgets](docs/widgets.md)
+- [styling and layout](docs/styling-layout.md)
+
+Generated API docs are produced by `rebar3 edoc`.
 
 ## License
 

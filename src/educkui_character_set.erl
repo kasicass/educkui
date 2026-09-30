@@ -1,6 +1,6 @@
 %% @doc Character sets for drawing, with ASCII fallback.
 %%
-%% `unicode` uses box-drawing characters; `ascii` uses `+`, `-`, `|` so that
+%% `unicode' uses box-drawing characters; `ascii' uses `+', `-', `|' so that
 %% borders and charts degrade gracefully on ASCII-only terminals.
 -module(educkui_character_set).
 

@@ -1,9 +1,9 @@
 %% @doc SGR (Select Graphic Rendition) parameter and sequence generation.
 %%
 %% Provides two modes of operation:
-%% - Parameter mode (`color_param/2`, `attr_param/1`, ...) returns plain
-%%   strings for combining into a single `ESC[...m` sequence.
-%% - Sequence mode (`color_sequence/2`, `attr_sequence/1`, ...) returns
+%% - Parameter mode (`color_param/2', `attr_param/1', ...) returns plain
+%%   strings for combining into a single `ESC[...m' sequence.
+%% - Sequence mode (`color_sequence/2', `attr_sequence/1', ...) returns
 %%   complete iolists.
 -module(educkui_sgr).
 

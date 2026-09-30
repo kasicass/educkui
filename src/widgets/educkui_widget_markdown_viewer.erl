@@ -1,8 +1,8 @@
 %% @doc A minimal Markdown viewer widget.
 %%
-%% Renders a subset of Markdown as a render tree: `#`/`##` headings (bold),
-%% `-` bullet lists, `**bold**` and `*italic*` inline spans, and plain
-%% paragraphs. Props: `{text, binary()}`.
+%% Renders a subset of Markdown as a render tree: `#'/`##' headings (bold),
+%% `-' bullet lists, `**bold**' and `*italic*' inline spans, and plain
+%% paragraphs. Props: `{text, binary()}'.
 -module(educkui_widget_markdown_viewer).
 
 -behaviour(educkui_component).
@@ -57,8 +57,8 @@ inline_node({bold, T}) ->
 inline_node({italic, T}) ->
     educkui_render_node:text(T, educkui_style:from([{italic, true}])).
 
-%% Splits a line into {Style, Text} segments. Bold `**...**` takes priority
-%% over italic `*...*`; spans are non-nested.
+%% Splits a line into {Style, Text} segments. Bold `**...**' takes priority
+%% over italic `*...*'; spans are non-nested.
 -spec split_inline(binary()) -> [{plain | bold | italic, binary()}].
 split_inline(Text) ->
     split_inline(Text, []).

@@ -2,8 +2,8 @@
 %%
 %% Owns terminal state (raw mode, alternate screen, cursor visibility, mouse
 %% tracking) and performs all terminal I/O on behalf of the runtime and
-%% backends. Uses OTP 28's `shell:start_interactive({noshell, raw})` for raw
-%% mode and `io:put_chars/2` for output.
+%% backends. Uses OTP 28's `shell:start_interactive({noshell, raw})' for raw
+%% mode and `io:put_chars/2' for output.
 -module(educkui_terminal).
 
 -behaviour(gen_server).
@@ -20,9 +20,9 @@
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
-%% `shell:start_interactive({noshell, raw})` may return `{error, enotsup}` at
+%% `shell:start_interactive({noshell, raw})' may return `{error, enotsup}' at
 %% runtime on non-tty devices even though the OTP spec only lists
-%% `ok | {error, already_started}`. Suppress the resulting dead-clause
+%% `ok | {error, already_started}'. Suppress the resulting dead-clause
 %% warning for the defensive error clause.
 -dialyzer({nowarn_function, do_activate_raw/0}).
 

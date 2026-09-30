@@ -1,6 +1,6 @@
 %% @doc A stateful tree view widget.
 %%
-%% The tree is a list of `{Id, Label, Children}` tuples (children is a list of
+%% The tree is a list of `{Id, Label, Children}' tuples (children is a list of
 %% the same shape). Up/Down move the selection among visible nodes; Right
 %% expands the selected node, Left collapses it, Enter toggles expansion.
 %% Expanded state is an ordset of node ids.

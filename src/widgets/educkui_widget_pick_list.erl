@@ -1,8 +1,8 @@
 %% @doc A stateful inline pick-list widget with type-ahead filtering.
 %%
-%% Implements The Elm Architecture. Props: `{items, [binary()]}` (required),
-%% `{selected, non_neg_integer()}` (index into items, default 0),
-%% `{prompt, binary()}` (default `<<"">>`).
+%% Implements The Elm Architecture. Props: `{items, [binary()]}' (required),
+%% `{selected, non_neg_integer()}' (index into items, default 0),
+%% `{prompt, binary()}' (default `<<"">>').
 %%
 %% When focused:
 %% - printable characters filter the item list (case-insensitive substring)

@@ -1,6 +1,6 @@
 %% @doc Helper functions for building components and render trees.
 %%
-%% Provides `text/box/stack/styled/empty` delegates, props validation,
+%% Provides `text/box/stack/styled/empty' delegates, props validation,
 %% style merging, and text/geometry helpers.
 -module(educkui_component_helpers).
 
@@ -80,8 +80,8 @@ empty() -> educkui_render_node:empty().
 
 %% @doc Validates and extracts props with type checking and defaults.
 %%
-%% Specs are `{Name, Type, Opts}` tuples. Types: `string`, `integer`,
-%% `boolean`, `atom`, `any`, `style`. Options: `required`, `default`.
+%% Specs are `{Name, Type, Opts}' tuples. Types: `string', `integer',
+%% `boolean', `atom', `any', `style'. Options: `required', `default'.
 -spec props(map(), [{atom(), atom(), [{atom(), term()}]}]) -> map().
 props(Props, Specs) when is_map(Props), is_list(Specs) ->
     lists:foldl(

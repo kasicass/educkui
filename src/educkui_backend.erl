@@ -2,8 +2,8 @@
 %%
 %% A backend owns terminal state and performs all terminal I/O (cursor,
 %% screen, rendering, input). Two implementations are provided:
-%% - `educkui_backend_raw` - full terminal control (raw mode)
-%% - `educkui_backend_tty` - fallback for constrained environments
+%% - `educkui_backend_raw' - full terminal control (raw mode)
+%% - `educkui_backend_tty' - fallback for constrained environments
 -module(educkui_backend).
 
 -export_type([position/0, size/0, color/0, cell/0, event/0, state/0]).

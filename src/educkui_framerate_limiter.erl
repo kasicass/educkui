@@ -1,6 +1,6 @@
 %% @doc Framerate throttle helper.
 %%
-%% The runtime schedules render ticks with `erlang:send_after/3`; this module
+%% The runtime schedules render ticks with `erlang:send_after/3'; this module
 %% provides the pure timing predicate used to decide whether a scheduled tick
 %% should actually render, so that back-to-back dirty frames coalesce into a
 %% single render at most once per interval.
@@ -15,8 +15,8 @@ default_interval() -> 16.
 monotonic_ms() ->
     erlang:monotonic_time(millisecond).
 
-%% @doc Returns true if `Interval` milliseconds have elapsed since
-%% `LastRender` (or if there has been no previous render).
+%% @doc Returns true if `Interval' milliseconds have elapsed since
+%% `LastRender' (or if there has been no previous render).
 -spec should_render(integer() | undefined, pos_integer()) -> boolean().
 should_render(undefined, _Interval) ->
     true;

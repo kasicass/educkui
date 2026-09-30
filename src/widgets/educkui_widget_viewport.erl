@@ -1,11 +1,11 @@
 %% @doc A stateless scrollable viewport.
 %%
-%% Renders a child render tree (`content`) shifted up by `scroll_y` rows, so
+%% Renders a child render tree (`content') shifted up by `scroll_y' rows, so
 %% only the visible window lands inside this component's rect. Cells outside
 %% the window are dropped by the screen buffer.
 %%
-%% Props: `{content, #dui_node{}}` (render tree), `{scroll_y, non_neg_integer()}`,
-%% `{content_height, pos_integer()}` (total height of the content in rows).
+%% Props: `{content, #dui_node{}}' (render tree), `{scroll_y, non_neg_integer()}',
+%% `{content_height, pos_integer()}' (total height of the content in rows).
 -module(educkui_widget_viewport).
 
 -behaviour(educkui_component).

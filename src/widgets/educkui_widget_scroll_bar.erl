@@ -1,8 +1,8 @@
 %% @doc A stateless scrollbar widget.
 %%
-%% Props: `{total, pos_integer()}` (total items/lines), `{offset,
-%% non_neg_integer()}`, `{viewport, pos_integer()}` (visible items/lines),
-%% `{vertical, boolean()}` (default true). Renders a track with a thumb whose
+%% Props: `{total, pos_integer()}' (total items/lines), `{offset,
+%% non_neg_integer()}', `{viewport, pos_integer()}' (visible items/lines),
+%% `{vertical, boolean()}' (default true). Renders a track with a thumb whose
 %% size and position are proportional to viewport/total and offset/total.
 -module(educkui_widget_scroll_bar).
 

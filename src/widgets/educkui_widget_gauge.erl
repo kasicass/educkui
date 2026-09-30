@@ -1,6 +1,6 @@
 %% @doc A stateless gauge widget (progress bar with percentage label).
 %%
-%% Props: `{value, float()}` (0.0..1.0), `{style, term()}`, `{fill_style, term()}`.
+%% Props: `{value, float()}' (0.0..1.0), `{style, term()}', `{fill_style, term()}'.
 -module(educkui_widget_gauge).
 
 -behaviour(educkui_component).

@@ -1,8 +1,8 @@
 %% @doc Raw-mode input handler.
 %%
-%% Reads single characters from stdin via `io:get_chars/3` using a persistent
-%% reader process that forwards `{educkui_input, Data}` messages to the owner.
-%% `poll/2` pops queued events, tries to complete a buffered escape sequence,
+%% Reads single characters from stdin via `io:get_chars/3' using a persistent
+%% reader process that forwards `{educkui_input, Data}' messages to the owner.
+%% `poll/2' pops queued events, tries to complete a buffered escape sequence,
 %% and otherwise waits for input with a timeout.
 -module(educkui_input_raw).
 
@@ -44,7 +44,7 @@ poll(State, Timeout) ->
     end.
 
 %% @doc Feeds raw input bytes into the handler, returning all ready events.
-%% Used by the runtime instead of `poll/2` so the gen_server never blocks.
+%% Used by the runtime instead of `poll/2' so the gen_server never blocks.
 -spec feed(map(), binary()) -> {[#dui_event{}], map()}.
 feed(#{buffer := Buffer, event_queue := Queue} = State, Data) when is_binary(Data) ->
     Combined = <<Buffer/binary, Data/binary>>,
@@ -52,7 +52,7 @@ feed(#{buffer := Buffer, event_queue := Queue} = State, Data) when is_binary(Dat
     {Queue ++ Events, State#{buffer := Remaining, event_queue := []}}.
 
 %% @doc Flushes a buffered partial escape sequence after the escape timeout.
-%% A lone ESC is emitted as an `esc` key; other incomplete sequences are
+%% A lone ESC is emitted as an `esc' key; other incomplete sequences are
 %% dropped (defensive).
 -spec flush_partial(map()) -> {[#dui_event{}], map()}.
 flush_partial(#{buffer := <<27>>} = State) ->

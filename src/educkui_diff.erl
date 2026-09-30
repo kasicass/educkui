@@ -2,16 +2,16 @@
 %%
 %% Compares the current and previous buffers and produces a minimal list of
 %% render operations. Changed cells are grouped into spans within each row;
-%% adjacent spans separated by a small gap (<= 3 columns) are merged because
+%% adjacent spans separated by a small gap (&lt;= 3 columns) are merged because
 %% including the unchanged cells is cheaper than moving the cursor around
 %% them. Spans are split by style so SGR sequences are emitted only on style
 %% changes.
 %%
 %% Operation types:
-%% - `{move, Row, Col}` - move the cursor (1-indexed)
-%% - `{style, Style}`    - set text style
-%% - `{text, Binary}`    - output text at the current cursor position
-%% - `reset`             - reset all style attributes
+%% - `{move, Row, Col}' - move the cursor (1-indexed)
+%% - `{style, Style}'    - set text style
+%% - `{text, Binary}'    - output text at the current cursor position
+%% - `reset'             - reset all style attributes
 -module(educkui_diff).
 
 -include("educkui.hrl").

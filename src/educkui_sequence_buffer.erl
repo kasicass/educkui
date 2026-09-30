@@ -39,9 +39,9 @@ new(Opts) when is_list(Opts) ->
 %% Appending
 %% ---------------------------------------------------------------------------
 
-%% @doc Appends data. Returns `{ok, Buf}` normally or
-%% `{flush, Data, Buf}` if the threshold was exceeded (caller must write
-%% `Data`).
+%% @doc Appends data. Returns `{ok, Buf}' normally or
+%% `{flush, Data, Buf}' if the threshold was exceeded (caller must write
+%% `Data').
 -spec append(#dui_seqbuf{}, iodata()) ->
     {ok, #dui_seqbuf{}} | {flush, iodata(), #dui_seqbuf{}}.
 append(#dui_seqbuf{buffer = Buf, size = Size, threshold = Threshold} = S, Data) ->

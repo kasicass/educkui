@@ -4,9 +4,9 @@
 %%
 %%   1. receive an event (terminal input, command result, ...)
 %%   2. route it to the root component
-%%   3. call `event_to_msg/2`, then `update/2`
+%%   3. call `event_to_msg/2', then `update/2'
 %%   4. collect and execute commands
-%%   5. on each render tick, call `view/1` and rasterize to the buffer
+%%   5. on each render tick, call `view/1' and rasterize to the buffer
 %%   6. draw changed cells to the backend (double buffering)
 -module(educkui_runtime).
 
@@ -422,7 +422,7 @@ run_runtime_cmd(_ComponentId, {focus, Id}, State) ->
 run_runtime_cmd(_ComponentId, {parent, Msg}, State) ->
     dispatch_root(educkui_event:custom(parent, Msg), State).
 
-%% @doc Moves focus to `Id`, sending focus-lost/gained events as needed.
+%% @doc Moves focus to `Id', sending focus-lost/gained events as needed.
 -spec set_focus(term(), #dui_runtime_state{}) -> #dui_runtime_state{}.
 set_focus(Id, State) ->
     OldFocus = educkui_focus:current(State#dui_runtime_state.focus),
@@ -479,7 +479,7 @@ feed_input(#dui_runtime_state{input_handler = Handler, input_state = InputState}
             schedule_escape_flush(State1)
     end.
 
-%% @doc Flushes a buffered partial escape sequence (lone ESC) into an `esc`
+%% @doc Flushes a buffered partial escape sequence (lone ESC) into an `esc'
 %% key event once the escape timeout has elapsed.
 -spec flush_escape(#dui_runtime_state{}) -> #dui_runtime_state{}.
 flush_escape(#dui_runtime_state{input_handler = Handler, input_state = InputState} = State) ->
@@ -526,8 +526,8 @@ do_render(#dui_runtime_state{root_module = RootModule, root_state = RootState,
     Cur = State#dui_runtime_state.current_buffer,
     Prev = State#dui_runtime_state.previous_buffer,
     educkui_buffer:clear(Cur),
-    %% `educkui_render:render/3` returns `{Col, Row, Cell}` (0-based), while
-    %% `educkui_buffer:set_cells/2` expects `{Row, Col, Cell}` (1-based).
+    %% `educkui_render:render/3' returns `{Col, Row, Cell}' (0-based), while
+    %% `educkui_buffer:set_cells/2' expects `{Row, Col, Cell}' (1-based).
     educkui_buffer:set_cells(Cur, [{Y + 1, X + 1, Cell} || {X, Y, Cell} <- Cells]),
 
     State0 = State#dui_runtime_state{

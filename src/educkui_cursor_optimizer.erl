@@ -1,6 +1,6 @@
 %% @doc Optimizes cursor movement by selecting the cheapest movement option.
 %%
-%% Instead of always using absolute positioning (`ESC[r;cH`), the optimizer
+%% Instead of always using absolute positioning (`ESC[r;cH'), the optimizer
 %% computes the byte cost of absolute, relative, carriage-return, home and
 %% space-based movement and picks the minimum. This can cut cursor movement
 %% bytes significantly compared to naive positioning.
@@ -173,7 +173,7 @@ space_option(0, ColDiff) when ColDiff > 0, ColDiff =< ?SPACE_THRESHOLD ->
 space_option(_RowDiff, _ColDiff) ->
     [].
 
-%% Bare `\n` is avoided: with OPOST disabled in raw mode it does not return
+%% Bare `\n' is avoided: with OPOST disabled in raw mode it does not return
 %% the carriage, causing staircase rendering. Use ANSI cursor-down instead.
 -spec newline_options(integer(), pos_integer(), pos_integer()) ->
     [{iodata(), pos_integer()}].

@@ -1,13 +1,13 @@
 %% @doc Immutable style type and operations.
 %%
 %% Styles define foreground/background colors and text attributes. A style's
-%% `fg`/`bg` fields are `undefined` when unset so that `merge/2` and
-%% `inherit/2` can tell "not specified" apart from the explicit terminal
-%% default color `default`.
+%% `fg'/`bg' fields are `undefined' when unset so that `merge/2' and
+%% `inherit/2' can tell "not specified" apart from the explicit terminal
+%% default color `default'.
 %%
 %% Attributes are stored as an ordset (sorted unique list) - the OTP
 %% Efficiency Guide favours plain lists for tiny sets; an ordset gives us
-%% set semantics for equality without a map-backed `sets` record.
+%% set semantics for equality without a map-backed `sets' record.
 -module(educkui_style).
 
 -include("educkui.hrl").

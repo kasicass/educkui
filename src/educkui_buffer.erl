@@ -1,9 +1,9 @@
 %% @doc ETS-backed screen buffer for storing cells.
 %%
-%% The buffer uses an ETS `ordered_set` table keyed by `{Row, Col}` tuples
+%% The buffer uses an ETS `ordered_set' table keyed by `{Row, Col}' tuples
 %% (both 1-indexed) for O(log n) access and natural row-major iteration.
-%% All cells are initialized to empty, so the buffer is dense and `get_row/2`
-%% always returns exactly `cols` cells.
+%% All cells are initialized to empty, so the buffer is dense and `get_row/2'
+%% always returns exactly `cols' cells.
 -module(educkui_buffer).
 
 -include("educkui.hrl").

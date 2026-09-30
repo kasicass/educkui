@@ -1,6 +1,6 @@
 %% @doc Theme management.
 %%
-%% A theme is a map from style names (atoms) to `#dui_style{}` values. It also
+%% A theme is a map from style names (atoms) to `#dui_style{}' values. It also
 %% provides the named-color to RGB conversion table used by color degradation
 %% and by components that need to reason about colors.
 -module(educkui_theme).

@@ -1,33 +1,33 @@
 %% @doc A stateful form widget supporting multiple field types.
 %%
 %% Implements The Elm Architecture so it can be embedded as a component node
-%% (`educkui_render_node:component/3`). The form keeps all field values,
+%% (`educkui_render_node:component/3'). The form keeps all field values,
 %% focus, validation errors and navigation state internally.
 %%
 %% Field types:
-%% - `text`         - single-line text input
-%% - `password`     - masked single-line text input
-%% - `checkbox`     - boolean toggle
-%% - `radio`        - single selection from options
-%% - `select`       - single selection from options
-%% - `multi_select` - multiple selection from options
+%% - `text'         - single-line text input
+%% - `password'     - masked single-line text input
+%% - `checkbox'     - boolean toggle
+%% - `radio'        - single selection from options
+%% - `select'       - single selection from options
+%% - `multi_select' - multiple selection from options
 %%
-%% Props (passed through `component/3`):
-%% - `{fields, [map()]}` (required) - field definitions
-%% - `{groups, [map()]}`            - optional group headers
-%% - `{values, map()}`              - initial values
-%% - `{show_submit_button, boolean()}` (default `true`)
-%% - `{submit_label, binary()}`     (default `<<"Submit">>`)
-%% - `{validate_on_blur, boolean()}`(default `true`)
-%% - `{label_width, pos_integer()}` (default `15`)
-%% - `{field_width, pos_integer()}` (default `30`, reserved)
-%% - `{on_submit, fun((map()) -> term())}`
-%% - `{on_change, fun((atom(), term()) -> term())}`
+%% Props (passed through `component/3'):
+%% - `{fields, [map()]}' (required) - field definitions
+%% - `{groups, [map()]}'            - optional group headers
+%% - `{values, map()}'              - initial values
+%% - `{show_submit_button, boolean()}' (default `true')
+%% - `{submit_label, binary()}'     (default `<<"Submit">>')
+%% - `{validate_on_blur, boolean()}'(default `true')
+%% - `{label_width, pos_integer()}' (default `15')
+%% - `{field_width, pos_integer()}' (default `30', reserved)
+%% - `{on_submit, fun((map()) -> term())}'
+%% - `{on_change, fun((atom(), term()) -> term())}'
 %%
 %% A field map supports these keys:
-%% - `id` (required), `type` (required), `label`, `options`,
-%%   `required`, `validators`, `visible_when`, `group`, `placeholder`,
-%%   `default`.
+%% - `id' (required), `type' (required), `label', `options',
+%%   `required', `validators', `visible_when', `group', `placeholder',
+%%   `default'.
 %%
 %% Navigation:
 %% - Up/Down move between fields (and to/from the submit button).

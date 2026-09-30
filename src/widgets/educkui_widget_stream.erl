@@ -1,19 +1,19 @@
 %% @doc A stateful streaming-data widget with a bounded buffer.
 %%
 %% Implements The Elm Architecture. The widget is embedded as a component
-%% node (`educkui_render_node:component/3`) and receives stream items via
-%% `educkui_runtime:send_message(Runtime, ComponentId, {stream_item, Data})`
-%% or `{stream_items, [Data]}`.
+%% node (`educkui_render_node:component/3') and receives stream items via
+%% `educkui_runtime:send_message(Runtime, ComponentId, {stream_item, Data})'
+%% or `{stream_items, [Data]}'.
 %%
 %% Props:
-%% - `{buffer_size, pos_integer()}`      (default `1000`)
-%% - `{overflow_strategy, atom()}`       `drop_oldest | drop_newest | block |
-%%                                        sliding` (default `drop_oldest`)
-%% - `{show_stats, boolean()}`           (default `true`)
-%% - `{height, pos_integer()}`           visible item count (default `10`)
-%% - `{item_renderer, fun((term()) -> term())}` per-item renderer
-%% - `{on_item, fun((term()) -> term())}`      called for each received item
-%% - `{on_error, fun((term()) -> term())}`     reserved for error notifications
+%% - `{buffer_size, pos_integer()}'      (default `1000')
+%% - `{overflow_strategy, atom()}'       `drop_oldest | drop_newest | block |
+%%                                        sliding' (default `drop_oldest')
+%% - `{show_stats, boolean()}'           (default `true')
+%% - `{height, pos_integer()}'           visible item count (default `10')
+%% - `{item_renderer, fun((term()) -> term())}' per-item renderer
+%% - `{on_item, fun((term()) -> term())}'      called for each received item
+%% - `{on_error, fun((term()) -> term())}'     reserved for error notifications
 %%
 %% Keyboard:
 %% - Space: pause/resume

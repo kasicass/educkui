@@ -1,8 +1,8 @@
 %% @doc A stateless context menu widget.
 %%
 %% Renders a list of items in a bordered box at a position. Props:
-%% `{items, [binary()]}`, `{selected, non_neg_integer()}`, `{x, integer()}`,
-%% `{y, integer()}` (0-based, relative to the widget's rect), `{style, term()}`.
+%% `{items, [binary()]}', `{selected, non_neg_integer()}', `{x, integer()}',
+%% `{y, integer()}' (0-based, relative to the widget's rect), `{style, term()}'.
 -module(educkui_widget_context_menu).
 
 -behaviour(educkui_component).

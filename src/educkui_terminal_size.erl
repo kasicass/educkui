@@ -1,8 +1,8 @@
 %% @doc Terminal size detection with graceful fallback.
 %%
-%% Primary source is `io:columns/1` and `io:rows/1`; when the device does not
+%% Primary source is `io:columns/1' and `io:rows/1'; when the device does not
 %% support geometry queries (or is not a terminal), falls back to the
-%% `COLUMNS`/`LINES` environment variables, then to a 24x80 default.
+%% `COLUMNS'/`LINES' environment variables, then to a 24x80 default.
 -module(educkui_terminal_size).
 
 -export([detect/0, detect/1, from_io/2, default/0]).
@@ -21,8 +21,8 @@ detect(IoDevice) ->
         error -> {ok, default()}
     end.
 
-%% @doc Combines the results of `io:rows/1` and `io:columns/1` into a size,
-%% or returns `error` so the caller can apply fallbacks.
+%% @doc Combines the results of `io:rows/1' and `io:columns/1' into a size,
+%% or returns `error' so the caller can apply fallbacks.
 -spec from_io({ok, pos_integer()} | {error, term()},
     {ok, pos_integer()} | {error, term()}) ->
     {ok, {pos_integer(), pos_integer()}} | error.

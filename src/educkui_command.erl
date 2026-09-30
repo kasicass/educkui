@@ -1,7 +1,7 @@
 %% @doc Command constructors.
 %%
 %% Commands are plain terms executed asynchronously by
-%% `educkui_command_executor`. `update/2` returns a list of commands to run.
+%% `educkui_command_executor'. `update/2' returns a list of commands to run.
 -module(educkui_command).
 
 -export([quit/0, noop/0, send_msg/2, exec/1, focus/1, parent/1]).

@@ -1,7 +1,7 @@
 %% @doc A stateful push-button widget.
 %%
-%% Props: `{label, binary()}`, `{id, term()}`. Enter/Space activate the button,
-%% sending `{parent, {button, Id}}` to the root component; Esc propagates.
+%% Props: `{label, binary()}', `{id, term()}'. Enter/Space activate the button,
+%% sending `{parent, {button, Id}}' to the root component; Esc propagates.
 -module(educkui_widget_push_button).
 
 -behaviour(educkui_elm).

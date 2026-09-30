@@ -1,6 +1,6 @@
 %% @doc TTY (line-based) input handler for constrained environments.
 %%
-%% Reads whole lines via `io:get_line/1` using a persistent reader process.
+%% Reads whole lines via `io:get_line/1' using a persistent reader process.
 %% Each line is emitted as a custom event carrying the line content; key
 %% parsing is not possible in cooked mode without raw terminal control.
 -module(educkui_input_tty).

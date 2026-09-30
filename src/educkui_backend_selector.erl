@@ -1,8 +1,8 @@
 %% @doc Backend selection.
 %%
-%% Strategy: "try raw mode first". `auto` attempts raw mode and falls back to
+%% Strategy: "try raw mode first". `auto' attempts raw mode and falls back to
 %% TTY when raw mode is unavailable (no tty, pipes, remote consoles).
-%% `raw` forces raw mode and errors if unavailable; `tty` always selects TTY.
+%% `raw' forces raw mode and errors if unavailable; `tty' always selects TTY.
 -module(educkui_backend_selector).
 
 -export([select/1]).

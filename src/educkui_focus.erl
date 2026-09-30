@@ -24,7 +24,7 @@ focus(Stack, Id) -> [Id | Stack].
 blur([]) -> [];
 blur([_ | Rest]) -> Rest.
 
-%% @doc Moves focus to the next id in `Ids` (wrapping around).
+%% @doc Moves focus to the next id in `Ids' (wrapping around).
 -spec next(focus_stack(), [term()]) -> focus_stack().
 next(Stack, []) -> Stack;
 next(Stack, Ids) ->
@@ -37,7 +37,7 @@ next(Stack, Ids) ->
             end
     end.
 
-%% @doc Moves focus to the previous id in `Ids` (wrapping around).
+%% @doc Moves focus to the previous id in `Ids' (wrapping around).
 -spec prev(focus_stack(), [term()]) -> focus_stack().
 prev(Stack, []) -> Stack;
 prev(Stack, Ids) ->

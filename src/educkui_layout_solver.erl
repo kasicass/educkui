@@ -1,8 +1,8 @@
 %% @doc A simple flex layout solver.
 %%
-%% Distributes `Total` units across a list of constraints. Fixed and minimum
+%% Distributes `Total' units across a list of constraints. Fixed and minimum
 %% sizes are honoured first, then remaining space is distributed to flex items
-%% proportionally to their flex factor, and finally `max` constraints are
+%% proportionally to their flex factor, and finally `max' constraints are
 %% applied.
 -module(educkui_layout_solver).
 
@@ -25,7 +25,7 @@ solve(Total, Constraints) ->
 %% Alignment
 %% ---------------------------------------------------------------------------
 
-%% @doc Returns per-child offsets within `Total` for the given alignment.
+%% @doc Returns per-child offsets within `Total' for the given alignment.
 -spec align(start | center | 'end' | space_between, non_neg_integer(),
     [non_neg_integer()]) -> [non_neg_integer()].
 align(start, _Total, Sizes) ->

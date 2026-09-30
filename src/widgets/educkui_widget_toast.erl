@@ -1,7 +1,7 @@
 %% @doc A stateless toast notification widget.
 %%
 %% Renders a short message inside a small bordered box near the bottom of the
-%% widget's rect. Props: `{message, binary()}`, `{style, term()}`.
+%% widget's rect. Props: `{message, binary()}', `{style, term()}'.
 -module(educkui_widget_toast).
 
 -behaviour(educkui_component).

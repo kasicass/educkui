@@ -1,11 +1,11 @@
-%% @doc Parses terminal input bytes into `#dui_event{}` records.
+%% @doc Parses terminal input bytes into `#dui_event{}' records.
 %%
 %% Handles control characters, printable ASCII, UTF-8 multi-byte characters,
 %% CSI/SS3 escape sequences (arrows, function keys, Home/End/Insert/Delete/
 %% PageUp/PageDown, modified keys), SGR mouse sequences and bracketed paste.
 %%
-%% The parser is stateless: `parse/1` returns `{Events, Remaining}`, where
-%% `Remaining` holds bytes that form a partial sequence and must be buffered
+%% The parser is stateless: `parse/1' returns `{Events, Remaining}', where
+%% `Remaining' holds bytes that form a partial sequence and must be buffered
 %% by the caller.
 -module(educkui_escape_parser).
 
