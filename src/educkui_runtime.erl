@@ -27,6 +27,8 @@
     get_component_state/2,
     size/1,
     copy_to_clipboard/1,
+    logs/1,
+    clear_logs/1,
     backend_mode/0,
     capabilities/0
 ]).
@@ -111,6 +113,16 @@ copy_to_clipboard(Text) when is_binary(Text) ->
         tty -> educkui_terminal:copy_to_clipboard(Text);
         _ -> ok
     end.
+
+%% @doc Returns the buffered log events (oldest first).
+-spec logs(pid()) -> [educkui_log:entry()].
+logs(_Runtime) ->
+    educkui_log:entries().
+
+%% @doc Clears the log buffer.
+-spec clear_logs(pid()) -> ok.
+clear_logs(_Runtime) ->
+    educkui_log:clear().
 
 %% @doc Returns the active backend mode from the persistent term cache.
 -spec backend_mode() -> raw | tty | skip | undefined.
@@ -205,6 +217,8 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
         shortcuts = proplists:get_value(shortcuts, Merged, [])
     },
 
+    State0 = install_log_handler(BackendMode, State),
+
     _ = case TerminalStarted of
         true -> educkui_signal_handler:install(self());
         false -> ok
@@ -212,7 +226,7 @@ init_after_backend(#{root_module := RootModule} = Ctx) ->
 
     erlang:send_after(RenderInterval, self(), render_tick),
 
-    State1 = execute_commands(root, InitCommands, State),
+    State1 = execute_commands(root, InitCommands, State0),
     %% Deliver the initial terminal size to the root component so it can lay
     %% out without waiting for the first resize event.
     State2 = dispatch_root(educkui_event:resize(Cols, Rows), State1),
@@ -707,6 +721,7 @@ create_buffers({Rows, Cols}) ->
 -spec cleanup(#dui_runtime_state{}) -> ok.
 cleanup(State) ->
     catch cancel_timers(State),
+    catch remove_log_handler(State),
     catch educkui_signal_handler:uninstall(self()),
     catch stop_reader(State#dui_runtime_state.input_reader),
     catch shutdown_backend(State#dui_runtime_state.backend, State#dui_runtime_state.backend_state),
@@ -722,6 +737,35 @@ cleanup(State) ->
 -spec cancel_timers(#dui_runtime_state{}) -> ok.
 cancel_timers(#dui_runtime_state{timers = Timers}) ->
     maps:foreach(fun(_Ref, Timer) -> _ = erlang:cancel_timer(Timer) end, Timers),
+    ok.
+
+%% @doc Installs the in-memory logger handler and silences the terminal
+%% handlers while the alternate screen is active. No-op for the skip backend.
+-spec install_log_handler(raw | tty | skip, #dui_runtime_state{}) ->
+    #dui_runtime_state{}.
+install_log_handler(skip, State) ->
+    State;
+install_log_handler(_Mode, State) ->
+    _ = educkui_log:ensure_started(),
+    _ = catch logger:add_handler(educkui_log, educkui_log_handler, #{level => all}),
+    Existing = [Id || Id <- logger:get_handler_ids(), Id =/= educkui_log],
+    lists:foreach(
+        fun(Id) ->
+            _ = logger:add_handler_filter(Id, educkui_silence,
+                                          {fun(_Event, _Extra) -> stop end, #{}})
+        end,
+        Existing),
+    State#dui_runtime_state{logger_handler_config = Existing}.
+
+%% @doc Removes the log handler and restores terminal log handlers.
+-spec remove_log_handler(#dui_runtime_state{}) -> ok.
+remove_log_handler(#dui_runtime_state{logger_handler_config = undefined}) ->
+    ok;
+remove_log_handler(#dui_runtime_state{logger_handler_config = Existing}) ->
+    lists:foreach(
+        fun(Id) -> _ = logger:remove_handler_filter(Id, educkui_silence) end,
+        Existing),
+    _ = logger:remove_handler(educkui_log),
     ok.
 
 -spec stop_reader(pid() | undefined) -> ok.
