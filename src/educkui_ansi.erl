@@ -31,10 +31,13 @@
     enable_app_cursor/0, disable_app_cursor/0,
     enable_mouse_tracking/1, disable_mouse_tracking/1,
     enable_sgr_mouse/0, disable_sgr_mouse/0,
-    enter_alternate_screen/0, leave_alternate_screen/0
+    enter_alternate_screen/0, leave_alternate_screen/0,
+    osc/2, set_title/1, clipboard/1, clipboard/2
 ]).
 
 -define(CSI, "\e[").
+-define(OSC, "\e]").
+-define(BEL, "\x07").
 
 -define(FOREGROUND_CODES, #{
     black => "30", red => "31", green => "32", yellow => "33",
@@ -284,6 +287,31 @@ enter_alternate_screen() -> [?CSI, "?1049h"].
 
 -spec leave_alternate_screen() -> iodata().
 leave_alternate_screen() -> [?CSI, "?1049l"].
+
+%% @doc Builds an OSC (Operating System Command) sequence:
+%% `ESC ] Params ; Data BEL'. `Params' is a list of binaries/strings, `Data'
+%% a binary. Use `set_title/1' or `clipboard/1,2' rather than calling this
+%% directly unless you need a custom command.
+-spec osc([term()], binary()) -> iodata().
+osc(Params, Data) when is_list(Params), is_binary(Data) ->
+    [?OSC, lists:join($;, Params), $;, Data, ?BEL].
+
+%% @doc Sets the terminal window title (OSC 0).
+-spec set_title(binary()) -> iodata().
+set_title(Title) when is_binary(Title) ->
+    osc([<<"0">>], Title).
+
+%% @doc Copies `Text' to the system clipboard using OSC 52 on the default
+%% (`c') selection. Terminals that support OSC 52 will honour this; others
+%% ignore it.
+-spec clipboard(binary()) -> iodata().
+clipboard(Text) -> clipboard(<<"c">>, Text).
+
+%% @doc Like `clipboard/1' but for an explicit clipboard selection
+%% (`<<"c">>' system, `<<"p">>' primary, `<<"s">>' select).
+-spec clipboard(binary(), binary()) -> iodata().
+clipboard(Selection, Text) when is_binary(Selection), is_binary(Text) ->
+    osc([<<"52">>, Selection], base64:encode(Text)).
 
 %% ---------------------------------------------------------------------------
 %% Internal

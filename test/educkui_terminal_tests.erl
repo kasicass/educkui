@@ -28,6 +28,7 @@ screen_ops_no_crash_test() ->
     ok = educkui_terminal:leave_alternate_screen(),
     ok = educkui_terminal:enable_mouse_tracking(click),
     ok = educkui_terminal:disable_mouse_tracking(),
+    ok = educkui_terminal:copy_to_clipboard(<<"hello">>),
     ok = educkui_terminal:restore(),
     gen_server:stop(educkui_terminal).
 

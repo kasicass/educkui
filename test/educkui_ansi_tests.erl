@@ -89,3 +89,20 @@ mouse_modes_test() ->
 alternate_screen_test() ->
     ?assertEqual(<<"\e[?1049h">>, iolist_to_binary(educkui_ansi:enter_alternate_screen())),
     ?assertEqual(<<"\e[?1049l">>, iolist_to_binary(educkui_ansi:leave_alternate_screen())).
+
+set_title_test() ->
+    ?assertEqual(<<"\e]0;my title\x07">>,
+                 iolist_to_binary(educkui_ansi:set_title(<<"my title">>))).
+
+osc_test() ->
+    ?assertEqual(<<"\e]9;data\x07">>,
+                 iolist_to_binary(educkui_ansi:osc([<<"9">>], <<"data">>))).
+
+clipboard_test() ->
+    %% base64("hi") = "aGk="
+    ?assertEqual(<<"\e]52;c;aGk=\x07">>,
+                 iolist_to_binary(educkui_ansi:clipboard(<<"hi">>))).
+
+clipboard_selection_test() ->
+    ?assertEqual(<<"\e]52;p;aGk=\x07">>,
+                 iolist_to_binary(educkui_ansi:clipboard(<<"p">>, <<"hi">>))).

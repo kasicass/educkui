@@ -15,6 +15,7 @@
     hide_cursor/0, show_cursor/0,
     get_terminal_size/0,
     enable_mouse_tracking/1, disable_mouse_tracking/0,
+    copy_to_clipboard/1,
     restore/0, raw_mode/0, get_state/0
 ]).
 
@@ -66,6 +67,12 @@ enable_mouse_tracking(Mode) when Mode =:= click; Mode =:= drag; Mode =:= all ->
 
 -spec disable_mouse_tracking() -> ok.
 disable_mouse_tracking() -> gen_server:call(?MODULE, disable_mouse_tracking).
+
+%% @doc Copies `Text' to the system clipboard via OSC 52. Returns `ok' even if
+%% the terminal ignores the sequence (there is no reliable acknowledgement).
+-spec copy_to_clipboard(binary()) -> ok.
+copy_to_clipboard(Text) when is_binary(Text) ->
+    gen_server:call(?MODULE, {copy_to_clipboard, Text}).
 
 -spec restore() -> ok.
 restore() -> gen_server:call(?MODULE, restore).
@@ -147,6 +154,10 @@ handle_call({enable_mouse_tracking, Mode}, _From, State) ->
 
 handle_call(disable_mouse_tracking, _From, State) ->
     educkui_term_utils:write(?MOUSE_OFF),
+    {reply, ok, State};
+
+handle_call({copy_to_clipboard, Text}, _From, State) ->
+    educkui_term_utils:write(educkui_ansi:clipboard(Text)),
     {reply, ok, State};
 
 handle_call(restore, _From, State) ->

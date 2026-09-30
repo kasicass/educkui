@@ -26,6 +26,7 @@
     set_props/3,
     get_component_state/2,
     size/1,
+    copy_to_clipboard/1,
     backend_mode/0,
     capabilities/0
 ]).
@@ -100,6 +101,16 @@ get_component_state(Runtime, ComponentId) ->
 -spec size(pid()) -> {pos_integer(), pos_integer()} | undefined.
 size(Runtime) ->
     gen_server:call(Runtime, size).
+
+%% @doc Copies `Text' to the system clipboard via OSC 52. No-op when running
+%% with the `skip' backend (headless tests).
+-spec copy_to_clipboard(binary()) -> ok.
+copy_to_clipboard(Text) when is_binary(Text) ->
+    case backend_mode() of
+        raw -> educkui_terminal:copy_to_clipboard(Text);
+        tty -> educkui_terminal:copy_to_clipboard(Text);
+        _ -> ok
+    end.
 
 %% @doc Returns the active backend mode from the persistent term cache.
 -spec backend_mode() -> raw | tty | skip | undefined.
